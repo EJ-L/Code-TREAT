@@ -1,16 +1,88 @@
-### About TREAT
+# TREAT: Code LLMs Trustworthiness / Reliability Evaluation And Testing
 
-### Tasks
+## Overview
 
-### Beginning the Experiments
+Large foundation models are fundamentally transforming the software engineering landscape, demonstrating exceptional potential across diverse tasks including code generation, debugging, and testing.  
+However, despite this rapid progress, a significant gap remains in comprehensive and rigorous evaluation methodologies for assessing the **trustworthiness** and **reliability** of these models across real-world software engineering scenarios.
 
-### Running Experiments
+Existing benchmarks suffer from limited task scope and fail to incorporate critical evaluation aspects such as multi-modality coding abilities and robustness of models.  
 
-### Running Evaluations
+To bridge this gap, we present an evaluation framework called **TREAT** (*Code LLMs **T**rustworthiness / **R**eliability **E**valuation **A**nd **T**esting*) that provides a **holistic assessment** of model performance in code intelligence tasks.
 
-### Configuration
-You can configure the tasks in the `config.yaml` file.
-We provided a configuration example `sample_config.yaml` for your reference.
+---
 
-### Prompts
-We have included the prompts in the `prompts.json` under the `templates` folder.
+## Key Contributions
+
+TREAT addresses key limitations in existing approaches with four main improvements:
+
+1. **Multi-Task Holistic Evaluation**  
+   Covers diverse software engineering activities beyond narrow coding challenges.  
+
+2. **Multi-Language and Multi-Modality Assessment**  
+   Extends beyond single-language, text-only benchmarks to include multi-modality coding tasks.  
+
+3. **Robustness Assessment**  
+   Evaluates model reliability under semantically-preserving code transformations.  
+
+4. **Rigorous Evaluation Methodology**  
+   Enhances trustworthiness of evaluation results through diverse prompts and adaptive solution extraction.  
+
+---
+
+## Insights from Evaluations
+
+Based on this framework, we evaluated over **25 state-of-the-art models** and uncovered key insights:
+
+- 📌 Current models show substantial **performance variation across programming tasks**.  
+- 📌 **Multi-modal language models** demonstrate limitations in UI code generation and modification.  
+- 📌 Existing models exhibit **severe robustness issues** on coding tasks.  
+- 📌 Our **multi-prompt evaluation method** mitigates prompt bias and yields more reliable results.  
+
+---
+
+## Leaderboard Results
+
+# Leaderboard: Overall model performance (%) on general coding tasks
+
+| Rank | Model Name          | CG   | CS   | CT   | CR   | CRv  | TG   | VD   | Avg. Rank |
+|------|---------------------|------|------|------|------|------|------|------|-----------|
+| 1    | GPT-5               | 🥇89.9 | 🥇98.4 | 🥇97.9 | 🥈97.8 | 26.9 | 🥇82.6 | 🥈67.3 | 1 |
+| 2    | Claude-Sonnet-4     | 74.0 | 93.8 | 86.0 | 87.9 | 30.9 | 🥉77.0 | 🥇69.5 | 2 |
+| 3    | DeepSeek-R1 (0528)  | 68.8 | 90.6 | 87.0 | 96.7 | 31.1 | 67.4 | 56.0 | 3 |
+| 4    | o3-mini             | 🥈79.9 | 79.5 | 🥈92.8 | 97.0 | 31.1 | 69.7 | 50.5 | 4 |
+| 5    | Claude-3.7-Sonnet   | 70.0 | 88.1 | 85.1 | 57.6 | 30.4 | 75.3 | 61.8 | 5 |
+| 6    | Qwen3-235B-A22B     | 63.2 | 95.3 | 87.1 | 94.1 | 30.9 | 66.7 | 55.5 | 6 |
+| 7    | o4-mini             | 74.2 | 84.6 | 81.0 | 🥇98.1 | 29.0 | 🥈81.1 | 56.3 | 7 |
+| 8    | GPT-4.1             | 🥉76.8 | 80.2 | 87.6 | 63.5 | 29.4 | 75.4 | 59.8 | 8 |
+| 9    | DeepSeek-R1         | 59.9 | 90.6 | 89.2 | 95.1 | 27.3 | 69.0 | 56.5 | 9 |
+| 10   | Grok-3-Mini         | 73.4 | 85.1 | 87.7 | 96.4 | 30.9 | 65.9 | 51.2 | 10 |
+| 11   | GPT-4o              | 66.4 | 87.7 | 82.0 | 57.7 | 30.3 | 69.3 | 60.3 | 11 |
+| 12   | DeepSeek-V3         | 65.2 | 92.8 | 82.1 | 57.7 | 30.9 | 68.6 | 51.5 | 12 |
+| 13   | Gemini-2.5-Pro      | 61.1 | 78.7 | 🥉90.3 | 🥉97.2 | 🥉31.5 | 32.6 | 54.5 | 13 |
+| 14   | Qwen3-30B-A3B       | 69.0 | 81.4 | 80.1 | 92.3 | 🥈31.6 | 64.9 | 54.0 | 14 |
+| 15   | Qwen3-32B           | 63.1 | 90.2 | 86.0 | 94.0 | 30.4 | 65.2 | 53.5 | 15 |
+| 16   | Claude-3.5-Sonnet   | 59.5 | 🥈96.5 | 81.7 | 60.1 | 30.0 | 73.2 | 47.7 | 16 |
+| 17   | LLaMA-3.3-70B       | 40.7 | 🥉96.0 | 70.0 | 47.2 | 30.7 | 66.7 | 🥉62.3 | 17 |
+| 18   | GPT-4-turbo         | 59.5 | 90.0 | 80.1 | 53.6 | 29.7 | 67.7 | 59.8 | 18 |
+| 19   | Qwen2.5-72B         | 63.8 | 86.5 | 72.5 | 48.2 | 31.3 | 64.8 | 52.3 | 19 |
+| 20   | Qwen2.5-Coder-32B   | 62.5 | 86.8 | 74.6 | 56.2 | 31.1 | 65.0 | 51.7 | 20 |
+| 21   | Gemma-3-27B         | 51.3 | 83.0 | 65.9 | 41.6 | 🥇31.7 | 64.7 | 62.0 | 21 |
+| 22   | Claude-3.5-Haiku    | 50.9 | 85.2 | 75.0 | 46.1 | 30.6 | 44.6 | 61.2 | 22 |
+| 23   | LLaMA-3.1-70B       | 48.7 | 74.5 | 67.7 | 41.5 | 30.2 | 66.3 | 57.2 | 23 |
+| 24   | LLaMA-4-Scout       | 51.2 | 74.4 | 64.4 | 48.4 | 30.1 | 68.7 | 49.0 | 24 |
+| 25   | GPT-3.5-turbo       | 50.6 | 71.2 | 66.5 | 34.8 | 30.4 | 67.5 | 45.8 | 25 |
+| 26   | LLaMA-3.1-8B        | 31.8 | 64.2 | 49.6 | 28.8 | 30.2 | 46.0 | 54.5 | 26 |
+
+---
+
+🏅 **Legend**:  
+- 🥇 = 1st place per column  
+- 🥈 = 2nd place per column  
+- 🥉 = 3rd place per column
+
+---
+
+## Citation
+
+If you use TREAT in your research, please cite:
+
