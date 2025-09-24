@@ -1,0 +1,149 @@
+model_specification:
+  models: ['gpt-4.1-2025-04-14']
+  models: ['llama-3.1-8B']
+  models: ['llama-3.1-70B']
+  models: ['deepseek-r1-free']
+  models: ['gpt-3.5-turbo-0125']
+  models: ['gpt-4o-2024-11-20']
+  models: ['gpt-4']
+  # models: ['o3-mini']
+  models: ['o4-mini']
+  models: ["gpt-4-turbo-2024-04-09"]
+  models: ["claude-3.5-sonnet-20241022"]
+  models: ["claude-3.5-haiku-20241022"]
+  # models: ['Qwen3-32B']
+  # models: ["llama-3.3-70B"]
+  # models: ["llama-4-scout"]
+  # models: ["claude-3.7-sonnet"]
+  # models: ['grok-3-mini']
+  models: ["claude-sonnet-4"]
+  # models: ["gemma-3-27b-it"]
+  models: ["deepseek-v3"]
+  models: ["gpt-5"]
+  models: ["Qwen2.5-72B"]
+  models: ["deepseek-r1-0528"]
+  models: ["gemini-2.5-pro-05-06"]
+  # models: ["Qwen2.5-Coder-32B"]
+  models: ["deepseek-r1"]
+  models: ["Qwen3-235B-A22B"]
+  models: ["Qwen3-30B-A3B"]
+  models: ["grok-3-mini"]
+  models: ["deepseek-r1"]
+  models: ["glm-4-flash"]
+  models: ["llama-4-scout"]
+  temperature: 0.8
+  top_k: 40
+  top_p: 0.95
+
+tasks:
+  # - task: unit_test_generation
+  #   enabled: true
+  #   parameters:
+  #     datasets: [{'symprompt': 'python'}]
+  #     template_categories: ['direct']
+  #     test_samples: null
+  #     n_requests: 1
+  #     parallel_requests: 10
+  #     save_dir: "results"
+  #     sampling_mode: "random"
+  #     sample_size: 200
+
+  #     sampling_seed: 42
+  #     sampling_manifest_path: null
+  - task: code_translation
+    enabled: false
+    parameters:
+      datasets: [{'hackerrank': 'python->java'}, {'hackerrank': 'java->python'}]
+      template_categories: ['direct']
+      test_samples: null
+      n_requests: 1
+      parallel_requests: 2
+      save_dir: "results"
+      sampling_mode: "manifest"
+      sample_size: 200
+      sampling_seed: 42
+      sampling_manifest_path: /Users/ericjohnli/Downloads/TREAT-refined/replication_manifest_json/code_translation_manifest.json
+  
+  - task: code_generation
+    enabled: false
+    parameters:
+      datasets: [{'hackerrank': 'java'}, {'geeksforgeeks': 'python'}]
+      template_categories: ['direct']
+      test_samples: null
+      n_requests: 1
+      parallel_requests: 10
+      save_dir: "results"
+      sampling_mode: "random"
+      sample_size: 2
+      sampling_seed: 42
+      sampling_manifest_path: ""
+    
+  - task: vulnerability_detection
+    enabled: false
+    parameters:
+      datasets: ['primevul', 'primevul_pair']
+      template_categories: ['direct']
+      test_samples: null
+      n_requests: 1
+      parallel_requests: 10
+      save_dir: "results"
+      sampling_mode: "manifest"
+      sample_size: 3
+      sampling_seed: 42
+      sampling_manifest_path: "/Users/ericjohnli/Downloads/TREAT-refined/results/vulnerability_detection_sample_manifest.json"
+
+  - task: code_summarization
+    enabled: false
+    parameters:
+      datasets: [{'github_2023': 'python'}, {'github_2023': 'java'}]
+      template_categories: ['direct']
+      test_samples: null
+      n_requests: 1
+      parallel_requests: 10
+      save_dir: "results"
+      sampling_mode: "random"
+      sample_size: 3
+      sampling_seed: 42
+      sampling_manifest_path: ""
+
+  - task: code_review_generation
+    enabled: true
+    parameters:
+      datasets: [{'github_2023': 'python'}, {'github_2023': 'go'}]
+      template_categories: ['direct']
+      test_samples: null
+      n_requests: 1
+      parallel_requests: 3
+      save_dir: "results"
+      sampling_mode: "manifest"
+      sample_size: 2
+      sampling_seed: 42
+      sampling_manifest_path: "replication_manifest_json/code_review_generation_manifest.json"
+
+  - task: input_prediction
+    enabled: false
+    parameters:
+      datasets: [{'hackerrank': 'java'}, {'geeksforgeeks': 'python'}]
+      template_categories: ['direct']
+      test_samples: null
+      n_requests: 1
+      parallel_requests: 10
+      save_dir: "results"
+      sampling_mode: "random"
+      sample_size: 3
+      sampling_seed: 42
+      sampling_manifest_path: ""
+
+  - task: output_prediction
+    enabled: false
+    parameters:
+      datasets: [{'hackerrank': 'python'}, {'geeksforgeeks': 'java'}]
+      template_categories: ['direct']
+      test_samples: null
+      n_requests: 1
+      parallel_requests: 10
+      save_dir: "results"
+      sampling_mode: "random"
+      sample_size: 3
+      sampling_seed: 42
+      sampling_manifest_path: ""

@@ -1,0 +1,283 @@
+{
+  "code_translation": {
+    "direct": {
+      "system_prompt": "You are a code translation system.",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Translate {SL} to {TL}:\n{SC}"
+        },
+        {
+          "template_id": 2,
+          "template": "Translating {SL} to {TL} ensures that {TL} code can be executed:\n{SC}"
+        },
+        {
+          "template_id": 3,
+          "template": "Please provide the {TL} translation for the following {SL} code:\n{SC}"
+        }
+      ]
+    },
+    "cot": {
+      "system_prompt": "You are an expert code translator. Think step by step when translating code between programming languages.",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Let's think step by step. Translate {SL} to {TL}:\n{SC}"
+        },
+        {
+          "template_id": 2,
+          "template": "Step by step, translating {SL} to {TL} ensures that {TL} code can be executed:\n{SC}"
+        }
+      ]
+    }
+  },
+  "code_generation": {
+    "direct": {
+      "system_prompt": "You are a helpful assistant.",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Please provide a self-contained {PL} script that solves the following problem in a markdown codeblock:\n{problem_description} Your task is to complete the function {function_signatures} {class_msg}"
+        },
+        {
+          "template_id": 2,
+          "template": "Write a {PL} function {function_signatures} {class_msg} to solve the following problem:\n{problem_description}"
+        },
+        {
+          "template_id": 3,
+          "template": "You are an expert {PL} programmer. You will be given a question (problem_description) and will generate a correct {PL} program that matches the specification and passes all tests, You will NOT return anything except for the program\n### Question\n{problem_description}\n{starter_code_msg}### Answer: (use the provided format with backticks)\n\n"
+        }
+      ]
+    }
+  },
+  "code_summarization": {
+    "direct": {
+      "system_prompt": "You are a helpful assistant",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Please generate a short comment in one sentence for the following function:\n{code}"
+        },
+        {
+          "template_id": 2,
+          "template": "Please write a brief comment in one sentence for the following function:\n{code}"
+        },
+        {
+          "template_id": 3,
+          "template": "Kindly provide a concise comment in one sentence for the following function:\n{code}"
+        }
+      ]
+    }
+  },
+  "vulnerability_detection": {
+    "direct": {
+      "system_prompt": "You are a security expert analyzing code for vulnerabilities. Be precise and accurate in your analysis.",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Please analyze the following code:\n```\n{code}\n```\nPlease indicate your analysis result with one of the options:\n(1) YES: A security vulnerability detected.\n(2) NO: No security vulnerability.\n\nOnly reply with one of the options above. Do not include any further information."
+        },
+        {
+          "template_id": 2,
+          "template": "Kindly review the code snippet below:\n```\n{code}\n```\nThen, respond exclusively with one of the following options:\n(1) YES: A security vulnerability detected.\n(2) NO: No security vulnerability.\n\nPlease provide only one of the two responses, without any extra details."
+        },
+        {
+          "template_id": 3,
+          "template": "Analyze the code snippet below:\n```\n{code}\n```\nAfter reviewing, choose exactly one of the following responses:\n(1) YES: A security vulnerability detected.\n(2) NO: No security vulnerability.\n\nRespond only with one of these options and no additional information."
+        }
+      ]
+    },
+    "cot": {
+      "system_prompt": "You are a security expert analyzing code for vulnerabilities. Think step by step through your analysis process.",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Let's think step by step. Please analyze the following code:\n```\n{code}\n```\nPlease indicate your analysis result with one of the options:\n(1) YES: A security vulnerability detected.\n(2) NO: No security vulnerability. \n\nOnly reply with one of the options above. Do not include any further information."
+        },
+        {
+          "template_id": 2,
+          "template": "Let's think step by step. Kindly review the code snippet below:\n```\n{code}\n```\nThen, respond exclusively with one of the following options:\n(1) YES: A security vulnerability detected.\n(2) NO: No security vulnerability.\n\nPlease provide only one of the two responses, without any extra details."
+        },
+        {
+          "template_id": 3,
+          "template": "Let's think step by step. Analyze the code snippet below:\n```\n{code}\n```\nAfter reviewing, choose exactly one of the following responses:\n(1) YES: A security vulnerability detected.\n(2) NO: No security vulnerability.\n\nRespond only with one of these options and no additional information."
+        }
+      ]
+    }
+  },
+  "input_prediction": {
+    "java": {
+      "direct": {
+        "system_prompt": "You are a helpful assistant. Please provide your input prediction in the following JSON format: {\"input_prediction\": \"<your input prediction>\"}.",
+        "user_prompt": [
+          {
+            "template_id": 1,
+            "template": "You are given a piece of code containing Java method `f` (already defined elsewhere) and a masked `public static void main` template where all inputs are `??`. Your task is to identify suitable inputs for each `??` with concrete, valid values so that, when combined with the existing class that contains `f`, the program compiles and the assertion in `main` holds true. No extra information except the filled `public static void main` code should be included in your submission.\nCode:\n{function}\nMasked main template:\n{assertion_query}"
+          },
+          {
+            "template_id": 2,
+            "template": "You are provided with a Java method `f` (defined elsewhere) and a `public static void main` template with input placeholders marked as `??`. Your task is to replace each `??` with concrete, valid values so that the program compiles and the assertion in `main` passes when run together with the class containing `f`. Submit only the completed `public static void main` code — no additional explanation or information.\nCode:\n{function}\nMasked main template:\n{assertion_query}"
+          },
+          {
+            "template_id": 3,
+            "template": "You are given a piece of code that includes a Java method `f` (defined elsewhere) and a `public static void main` template with masked inputs marked as `??`. Your task is to replace each `??` with concrete, valid input values such that, when combined with the existing class containing `f`, the program compiles successfully and the assertion in `main` passes. Your response must include **only** the completed `public static void main` code — no additional explanation or information.\nCode:\n{function}\nMasked main template:\n{assertion_query}"
+          }
+        ]
+      }
+    },
+    "python": {
+      "direct": {
+        "system_prompt": "You are a helpful assistant. Please provide your input prediction in the following JSON format: {\"input_prediction\": \"<your input prediction>\"}.",
+        "user_prompt": [
+          {
+            "template_id": 1,
+            "template": "You will be provided with a function `f` and a specified input format `inputs = ??`. Your task is to identify a suitable input for the function `f` that, when passed, results in the specified output. The solution should complete the final line of code to ensure the program executes error-free. Feel free to use any correct input, and note that the function f may incorporate predefined classes or data types. No extra information should be included in your submission.\n{function}\n{assertion_query}"
+          },
+          {
+            "template_id": 2,
+            "template": "You will be provided with a function `f` and a specified output in the format `inputs = ??`. Your task is to complete the final line of code so that the program executes error-free by identifying an input that, when passed to `f`, results in the specified output. There could be several correct inputs, and you may choose any one of them to complete the line. Do not include any extra information.\n{function}\n{assertion_query}"
+          },
+          {
+            "template_id": 3,
+            "template": "You are provided with a function named `f` and an expression formatted as `inputs = ??`. Complete the expression by determining any possible input that, when passed to function `f`, will produce the specified output. Ensure the final line of code runs error-free. Note that there might be several valid inputs; you only need to provide one. Avoid including any extra information.\n{function}\n{assertion_query}"
+          }
+        ]
+      }
+    }
+  },
+  "output_prediction": {
+    "java": {
+      "direct": {
+        "system_prompt": "You are a helpful assistant. Please provide your output prediction in the following JSON format: {\"output_prediction\": \"<your output prediction>\"}.",
+        "user_prompt": [
+          {
+            "template_id": 1,
+            "template": "You are given a piece of code containing Java method `f` (already defined elsewhere) and a masked `public static void main` template where the assertion's expected output(s) is/are `??`. Your task is to replace that `??` with concrete, valid value(s) so that, when combined with the existing class containing `f`, the program compiles and the assertion in `main` holds true. No extra information except the filled `public static void main` code should be included in your submission.\nCode:\n{function}\nMasked main template:\n{assertion_query}"
+          },
+          {
+            "template_id": 2,
+            "template": "You are given a Java code snippet containing a method `f` (defined elsewhere) and a `public static void main` template in which the expected output for an assertion is represented by `??`. Your task is to replace each `??` with specific, valid value(s) so that the program compiles successfully and the assertion in `main` passes. Your submission must include only the completed `public static void main` code — do not add any extra explanation or content.\nCode:\n{function}\nMasked main template:\n{assertion_query}"
+          },
+          {
+            "template_id": 3,
+            "template": "You are provided with a piece of code that includes a Java method `f` (already defined elsewhere) and a `public static void main` template where the expected output(s) in the assertion is/are marked as `??`. Your task is to replace each `??` with concrete, valid value(s) such that the program compiles and the assertion in `main` evaluates to true when combined with the given class containing `f`. Submit only the completed `public static void main` code — no additional information.\nCode:\n{function}\nMasked main template:\n{assertion_query}"
+          }
+        ]
+      }
+    },
+    "python": {
+      "direct": {
+        "system_prompt": "You are a helpful assistant. Please provide your output prediction in the following JSON format: {\"output_prediction\": \"<your output prediction>\"}.",
+        "user_prompt": [
+          {
+            "template_id": 1,
+            "template": "Based on the given code, which may contain errors, complete the assert statement with the output when executing the code on the given test case. Do not output any extra information, even if the function is incorrect or incomplete.\n{function}\n{assertion_query}"
+          },
+          {
+            "template_id": 2,
+            "template": "Please analyze the provided code, which might have errors, and finish the assert statement by specifying the expected result when the code is run with the specified test case. Ensure your response includes only the necessary information, without any additional comments about possible inaccuracies or incompleteness in the function.\n{function}\n{assertion_query}"
+          },
+          {
+            "template_id": 3,
+            "template": "Given the function below, which may have errors, complete the assert statement to reflect the output when running the function with the provided test case. Only include the necessary information in your response; do not add anything extra, regardless of the function's correctness or completion status.\n{function}\n{assertion_query}"
+          }
+        ]
+      }
+    }
+  },
+  "code_review_generation": {
+    "direct": {
+      "system_prompt": "You are a code reviewer specializing in analyzing and providing feedback on code. Please provide your review comments in the following JSON format: {\"comments\": \"<your comments>\"}.",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.\n### Instruction:\nReview the given code and provide a constructive code review comment.\n### Input:\nThe code/diff hunk is:\n'{diff_hunk}'\n### Response:\n{{comment}}"
+        },
+        {
+          "template_id": 2,
+          "template": "Below is an instruction describing a task, along with additional context. Your job is to generate a complete response based on the following request:\n### Instruction:\nExamine the provided code and offer constructive feedback.\n### Input:\nThe code or diff hunk is:\n'{diff_hunk}'\n### Response:\n{{comment}}"
+        },
+        {
+          "template_id": 3,
+          "template": "Below is a task description along with additional context. Provide an answer that fulfills the request.\n### Instruction:\nExamine the given code and deliver a helpful code review comment.\n### Input:\nThe code (or diff snippet) is:\n'{diff_hunk}'\n### Answer:\n{{comment}}"
+        }
+      ]
+    }
+  },
+  "vulnerability_detection_pairs": {
+    "direct": {
+      "system_prompt": "You are a security expert analyzing code for vulnerabilities. Be precise and accurate in your analysis.",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Please analyze the following two code snippets separately. For each snippet, provide exactly one answer either (1) or (2) from the options below:\n\nFor `code1`:\n- (1) YES: A security vulnerability detected.\n- (2) NO: No security vulnerability.\n\nFor `code2`:\n- (1) YES: A security vulnerability detected.\n- (2) NO: No security vulnerability.\n\nEnsure that your reply consists of two separate lines, one for `code1` and one for `code2`, with no additional information.\n\nCode snippet for `code1`:\n```\n{code1}\n```\n\nCode snippet for `code2`:\n```\n{code2}\n```\n\nPlease output in the following JSON format:\n```json\n{{\"code1\": \"<YES / NO>\",\n \"code2\": \"<YES / NO>\"}}\n```"
+        },
+        {
+          "template_id": 2,
+          "template": "Analyze the two provided code snippets individually. For each snippet, choose one answer from the following options:\n  \n**For `code1`:**\n- (1) YES: A security vulnerability detected.\n- (2) NO: No security vulnerability.\n  \n**For `code2`:**\n- (1) YES: A security vulnerability detected.\n- (2) NO: No security vulnerability.\n  \nYour response should consist of two separate lines one for `code1` and one for `code2` with no extra details. Use the following JSON format for your output:\n\n```json\n{{\"code1\": \"<YES / NO>\",\n \"code2\": \"<YES / NO>\"}}\n```\n\nHere are the code snippets:\n\n**Code snippet for `code1`:**\n```\n{code1}\n```\n\n**Code snippet for `code2`:**\n```\n{code2}\n```"
+        },
+        {
+          "template_id": 3,
+          "template": "Examine the two provided code snippets independently. For each snippet, select one answer either (1) or (2) from the choices below:\n\nFor `code1`:\n- (1) YES: A security vulnerability was detected.\n- (2) NO: No security vulnerability found.\n\nFor `code2`:\n- (1) YES: A security vulnerability was detected.\n- (2) NO: No security vulnerability found.\n\nYour response should include exactly two lines: one for `code1` and one for `code2`, without any extra details.\n\nHere are the code snippets:\n\nFor `code1`:\n```\n{code1}\n```\n\nFor `code2`:\n```\n{code2}\n```\n\nReturn your answer in this JSON structure:\n```json\n{{\"code1\": \"<YES / NO>\",\n \"code2\": \"<YES / NO>\"}}\n```"
+        }
+      ]
+    },
+    "cot": {
+      "system_prompt": "You are a security expert analyzing code for vulnerabilities. Think step by step through your analysis process.",
+      "user_prompt": [
+        {
+          "template_id": 1,
+          "template": "Let's think step by step. Please analyze the following two code snippets separately. For each snippet, provide exactly one answer either (1) or (2) from the options below:\n\nFor `code1`:\n- (1) YES: A security vulnerability detected.\n- (2) NO: No security vulnerability.\n\nFor `code2`:\n- (1) YES: A security vulnerability detected.\n- (2) NO: No security vulnerability.\n\nEnsure that your reply consists of two separate lines, one for `code1` and one for `code2`, with no additional information.\n\nCode snippet for `code1`:\n```\n{code1}\n```\n\nCode snippet for `code2`:\n```\n{code2}\n```\n\nPlease output in the following JSON format:\n```json\n{{\"code1\": \"<YES / NO>\",\n \"code2\": \"<YES / NO>\"}}\n```"
+        },
+        {
+          "template_id": 2,
+          "template": "Let's think step by step. Analyze the two provided code snippets individually. For each snippet, choose one answer from the following options:\n  \n**For `code1`:**\n- (1) YES: A security vulnerability detected.\n- (2) NO: No security vulnerability.\n  \n**For `code2`:**\n- (1) YES: A security vulnerability detected.\n- (2) NO: No security vulnerability.\n  \nYour response should consist of two separate lines one for `code1` and one for `code2` with no extra details. Use the following JSON format for your output:\n\n```json\n{{\"code1\": \"<YES / NO>\",\n \"code2\": \"<YES / NO>\"}}\n```\n\nHere are the code snippets:\n\n**Code snippet for `code1`:**\n```\n{code1}\n```\n\n**Code snippet for `code2`:**\n```\n{code2}\n```"
+        },
+        {
+          "template_id": 3,
+          "template": "Let's think step by step. Examine the two provided code snippets independently. For each snippet, select one answer either (1) or (2) from the choices below:\n\nFor `code1`:\n- (1) YES: A security vulnerability was detected.\n- (2) NO: No security vulnerability found.\n\nFor `code2`:\n- (1) YES: A security vulnerability was detected.\n- (2) NO: No security vulnerability found.\n\nYour response should include exactly two lines: one for `code1` and one for `code2`, without any extra details.\n\nHere are the code snippets:\n\nFor `code1`:\n```\n{code1}\n```\n\nFor `code2`:\n```\n{code2}\n```\n\nReturn your answer in this JSON structure:\n```json\n{{\"code1\": \"<YES / NO>\",\n \"code2\": \"<YES / NO>\"}}\n```"
+        }
+      ]
+    }
+  },
+  "unit_test_generation": {
+    "java": {
+      "direct": {
+        "system_prompt": "You are a professional Java unit test writer. Write comprehensive tests using JUnit 4 and Java 1.7 to maximize branch and line coverage.",
+        "user_prompt": [
+          {
+            "template_id": 1,
+            "template": "You are a professional who writes Java test methods. Please help me write some unit tests in java language, details are listed below:\n\nThis is the method that you are going to test.\n```\n{focal_method}\n```\n{params_lines}{param_classes_lines}{parameter_class_constructors_lines}{focal_class_constructors_lines}{class_fields_lines}{other_methods_lines}Please write some unit tests in Java 1.7 and Junit 4 with maximizing both branch and line coverage. Please ensure that the output format is Markdown, and no explanations needed."
+          },
+          {
+            "template_id": 2,
+            "template": "You are an expert in writing Java unit tests. I need your assistance in creating test cases for a given method. The method is provided below within a code block:\n\n```\n{focal_method}\n```\nAdditional information is included to help you understand the context:\n{params_lines}{param_classes_lines}{parameter_class_constructors_lines}{focal_class_constructors_lines}{class_fields_lines}{other_methods_lines}Your task is to write unit tests using Java 1.7 and JUnit 4. Please focus on maximizing both branch coverage and line coverage. Return only the test code formatted in Markdown, no explanations or comments are needed."
+          },
+          {
+            "template_id": 3,
+            "template": "You are a seasoned Java developer specializing in writing thorough and effective unit tests. I would like you to generate JUnit 4 test methods (Java 1.7 compatible) to thoroughly test the method provided below. Your task is to ensure that the tests achieve the highest possible branch and line coverage.\n\n```\n{focal_method}\n```\n{params_lines}{param_classes_lines}{parameter_class_constructors_lines}{focal_class_constructors_lines}{class_fields_lines}{other_methods_lines}Please provide the test methods in Markdown format only. The output should contain the code without any accompanying explanation or narrative."
+          }
+        ]
+      }
+    },
+    "python": {
+      "direct": {
+        "system_prompt": "You are a professional Python unit test writer. Always output valid pytest test code wrapped in\n```python\n{unit_test_code}\n```\nCover normal cases, invalid ts, boundary conditions, and exception paths.",
+        "user_prompt": [
+          {
+            "template_id": 1,
+            "template": "```\n{focal_code_context}\n```\nWrite pytest unit tests for the focal method `{focal_method_name}` from the module `{module_name}`."
+          },
+          {
+            "template_id": 2,
+            "template": "Here is the relevant code:\n```\n{focal_code_context}\n```\nYour task is to create pytest unit tests that thoroughly test the method `{focal_method_name}` defined in module `{module_name}`."
+          },
+          {
+            "template_id": 3,
+            "template": "```\n{focal_code_context}\n```\nGenerate a set of pytest unit tests for `{focal_method_name}`. The method comes from the module `{module_name}`. Ensure coverage of normal cases, edge cases, and error handling."
+          }
+        ]
+      }
+    }
+  }
+}

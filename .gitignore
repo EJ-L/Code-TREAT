@@ -1,0 +1,94 @@
+# --- Python basics ---
+__pycache__/
+*.py[cod]
+*$py.class
+.cache/
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+__pypackages__/
+
+# Virtual environments / env files
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Project virtual environments
+virtual_environments/
+
+# Version managers
+.python-version
+
+# --- Testing & coverage ---
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+pytestdebug.log
+.mypy_cache/
+.pytype/
+.dmypy.json
+.ruff_cache/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Logs / runs / outputs (keep placeholders if you track dirs) ---
+logs/
+*.log
+runs/
+outputs/
+!runs/.gitkeep
+!outputs/.gitkeep
+
+# --- Data (commit manifests, not blobs) ---
+data/
+csv/
+analyze_script/
+debug/
+fix_*/
+latex_table/
+rank_diff/
+results/
+
+*_backup.jsonl
+!data/.gitkeep
+
+# --- Templates & configs: allow local overrides without committing ---
+templates/*override*.json
+templates/prompts_override.json
+configs/**/local*.yaml
+configs/**/local*.yml
+configs/**/override*.yaml
+configs/**/override*.yml
+*secrets*.yaml
+*secrets*.yml
+*secrets*.json
+
+# --- Editors & OS cruft ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Native / tree-sitter / misc build artifacts ---
+*.so
+*.dylib
+*.dll
+
+# --- (If you have any Java bits in tasks) ---
+target/
+*.class
+
+# -- useful tools
+list_dir_structure.sh

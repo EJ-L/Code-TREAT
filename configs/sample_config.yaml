@@ -1,0 +1,89 @@
+# model_specification:
+#   - models: [] 
+#   - temperature: 0.8 
+#   - top_k: 40 # temporary
+#   - top_p: 0.95
+
+# tasks:
+#   - task: code_translation
+#     enabled: true
+#     parameters:
+#       dataset: 
+#         Hackerrank: ["alg", "ds", "math", "regex"]
+#         CodeTransOcean: ["dltrans", "llmtrans", "multilingualtrans", "nichetrans"]
+#         PolyHumanEval: ["polyhumaneval"]
+#       source_langauges: ['python', 'java']
+#       target_languages: ['python', 'java']
+
+#   - task: code_generation
+#     enabled: true
+#     parameters:
+#       datasets:
+#         Hackerrank: ["alg", "ds", "math", "regex"]
+#         Geeksforgeeks: ["ds"]
+#       programming_languages: ['python', 'java']
+model_specification:
+  # models: ['qwen2.5-72b', 'gemma-2-9b-it', 'gemma-2-27b-it', 'llama-3.1-8B', 'llama-3.1-70B']  # List of models, currently empty
+  # models: ['deepseek-r1']
+  models: ['gemma-3-27b-it']
+  # models: ['qwen2.5-72b']
+  # models: ['o3-mini']
+  # models: ['gemma-3-27b-it', 'Qwen2.5-Coder-32B', 'o3-mini']
+  # models: ['o4-mini'] 
+  models: ['grok-3-mini']  
+  # models: ['llama-4-scout']
+  # models: ['llama-4-scout-free']
+  # models: ["deepseek-r1-free"]
+  # models: ["o3-mini"]
+  # models: ["o4-mini"]
+  # models: ["gemini-2.5-pro-exp-03-25"]
+  # models: ["llama-3.3-70b"]
+  # models: ["deepseek-r1-free"]
+  # models: ["deepseek-r1-free"]
+  # models: ['qwen3-32b-local']
+  # models: ['Qwen3-32B']
+  # models: ['Qwen3-30B-A3B']
+  models: ['Qwen3-235B-A22B']
+  # models: ['gpt-4.1-2025-04-14']
+  # models: ['qwen2.5-72b']
+  # models: ['Qwen2.5-Coder-32B']
+  # models: ['qwen2.5-72b']
+  # models: ['claude-3.7-sonnet']
+  # models: ['llama-3.1-70B']
+  # models: ['llama-4-scout']
+  # List of models, currently empty
+  # models: ['claude-4-sonnet']
+  models: ['deepseek-r1-0528']
+  models: ['gpt-5']
+  # models: ['gemini-2.5-pro-preview-05-06']
+  # models: ['deepseek-r1']
+  temperature: 0.8
+  top_k: 40  # Comment about this being temporary
+  top_p: 0.95
+
+tasks:
+  - task: code_translation
+    enabled: false
+    parameters:
+      datasets:
+        # Hackerrank: ["alg", "ds", "math"]
+        # CodeTransOcean: ["llmtrans", "multilingualtrans"]
+        # PolyHumanEval: ["polyhumaneval"]
+      source_languages: ['python']
+      target_languages: ['java']
+  - task: code_generation
+    enabled: true
+    parameters:
+      datasets: 
+        # Hackerrank: ["alg", "ds", "math"]
+        Geeksforgeeks: ["geeksforgeeks"]
+        # LCB: ["lcb"]
+      # programming_languages: ['python', 'java']
+      programming_languages: ['python', 'java']
+  - task: code_summarization
+    enabled: false
+    parameters:
+      datasets:
+        Github: ["github"]
+      programming_languages: ['python', 'java', 'c', 'cpp', 'csharp', 'go', 'php', 'ruby', 'typescript', 'javascript']
+#         Geeksforgeeks: ["geeksforgeeks"]

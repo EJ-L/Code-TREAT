@@ -1,0 +1,17 @@
+
+{"Code Completion": "#write a quick sort algorithm"}
+{"Code Insertion": "\"\"\"<｜fim▁begin｜>def quick_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[0]
+    left = []
+    right = []
+<｜fim▁hole｜>
+        if arr[i] < pivot:
+            left.append(arr[i])
+        else:
+            right.append(arr[i])
+    return quick_sort(left) + [pivot] + quick_sort(right)<｜fim▁end｜>\"\"\""}
+{"Chat Completion": "messages=[
+    { 'role': 'user', 'content': 'write a quick sort algorithm in python.'}
+]"}

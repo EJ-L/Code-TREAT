@@ -1,0 +1,27 @@
+# Minimal compatible requirements for tqdm environment
+# Essential packages only to avoid dependency conflicts
+
+# Core HTTP libraries (downgraded for compatibility)
+requests==2.28.2
+urllib3==1.26.18
+
+# Testing framework
+pytest==7.4.4
+coverage==7.2.7
+pytest-cov==4.1.0
+pytest-json-report==1.5.0
+
+# Essential utilities
+certifi==2023.7.22
+charset-normalizer==3.3.2
+idna==3.4
+six==1.16.0
+python-dateutil==2.8.2
+
+# Minimal numpy for compatibility
+numpy==1.24.4
+
+# Build tools
+setuptools>=40.0.0,<70.0.0
+wheel
+packaging
