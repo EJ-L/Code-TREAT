@@ -58,6 +58,7 @@ fix_*/
 latex_table/
 rank_diff/
 results/
+old_scripts/
 
 *_backup.jsonl
 !data/.gitkeep

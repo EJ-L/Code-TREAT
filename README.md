@@ -74,16 +74,6 @@ We cover the overall model performance across Code Generation (CG), Code Summari
 | 25   | GPT-3.5-turbo       | 50.6   | 71.2   | 66.5   | 34.8   | 30.4  | 67.5   | 45.8  |
 | 26   | LLaMA-3.1-8B        | 31.8   | 64.2   | 49.6   | 28.8   | 30.2  | 46.0   | 54.5  |
 
----
-
-🏅 **Legend**:  
-- 🥇 = 1st place per column  
-- 🥈 = 2nd place per column  
-- 🥉 = 3rd place per column
-
-
----
-
 🏅 **Legend**:  
 - 🥇 = 1st place per column  
 - 🥈 = 2nd place per column  
@@ -91,6 +81,20 @@ We cover the overall model performance across Code Generation (CG), Code Summari
 
 ---
 
+To specify the model, task, and the parameter settings that you want, you need to specify and change the requirements in `configs/configs.yaml`, the example is already written in there!
+
+After configruation, you simply only need to do:
+```python
+uv run scripts/run_experiment.py
+```
+
+When you finish testing you can evaluate by doing:
+```python
+uv run scripts/run_evaluation.py
+```
+
+**Note**: We provided the uv.lock and pyproject.toml, so you can easily reproduce the environment and run the experiments.
+--- 
 ## Citation
 
 If you use TREAT in your research, please cite:

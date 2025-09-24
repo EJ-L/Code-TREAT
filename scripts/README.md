@@ -1,1 +1,0 @@
-uv run scripts/update_focal_methods.py  --input data/symprompt/data/focal_methods.jsonl   --output data/symprompt/data/focal_methods_with_branches.jsonl   --repos /Users/ericjohnli/Downloads/RA_ARISE/TREAT/tests/unit_test_generation/Symprompt/test-apps   --venvs virtual_environments/symprompt   --extra-env PYTEST_DISABLE_PLUGIN_AUTOLOAD=0
