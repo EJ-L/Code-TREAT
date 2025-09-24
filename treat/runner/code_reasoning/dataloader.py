@@ -1,11 +1,11 @@
 """
-Data loading utilities for code translation tasks
+Data loading utilities for code reasoning tasks
 """
 from typing import Dict, List, Any, Optional, Iterator, Tuple
 import random
 import os
 import json
-from .data import HackerrankData, GeeksforGeeksData
+from .data import Data
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GFG_DATA_DIRS = [
     os.path.join(PROJECT_ROOT, "..", "data", "geeksforgeeks", "code_execution", "java.jsonl"), 
@@ -17,7 +17,7 @@ HR_DATA_DIRS = [
 ]
 
 class DataLoader:
-    """Data loader for code translation with batching and filtering capabilities"""
+    """Data loader for code reasoning with batching and filtering capabilities"""
     
     def __init__(self, dataset: str, language: str):
         """Initialize the data loader with dataset path"""
@@ -26,7 +26,7 @@ class DataLoader:
 
 
     def load_data(self):
-        """Load all code translation data from the dataset"""
+        """Load all code reasoning data from the dataset"""
         if self.dataset == 'geeksforgeeks':
             return self.load_gfg()
         if self.dataset == 'hackerrank':
@@ -42,14 +42,15 @@ class DataLoader:
                     _id = item['question_id']
                     difficulty = item['difficulty']
                     masked_test_code = item['masked_test_code']
-                    for test_case in item['test_cases']:
-                        organized_data.append(HackerrankData(
-                            _id=_id,
-                            difficulty=difficulty,
-                            language=self.language,
-                            function=masked_test_code,
-                            test_case_info=test_case,
-                        ))
+                    # for test_case in item['test_cases']:
+                    organized_data.append(Data(
+                        _id=_id,
+                        dataset=self.dataset,
+                        difficulty=difficulty,
+                        language=self.language,
+                        function=masked_test_code,
+                        test_case_info=item['test_cases']
+                    ))
         return organized_data
     
     def load_gfg(self):
@@ -62,12 +63,16 @@ class DataLoader:
                     _id = item['question_id']
                     difficulty = item['difficulty']
                     masked_test_code = item['masked_test_code']
-                    for test_case in item['test_cases']:
-                        organized_data.append(GeeksforGeeksData(
-                            _id=_id,
-                            difficulty=difficulty,
-                            language=self.language,
-                            function=masked_test_code,
-                            test_case_info=test_case,
-                        ))
+                    _id = item['question_id']
+                    difficulty = item['difficulty']
+                    masked_test_code = item['masked_test_code']
+                    # for test_case in item['test_cases']:
+                    organized_data.append(Data(
+                        _id=_id,
+                        dataset=self.dataset,
+                        difficulty=difficulty,
+                        language=self.language,
+                        function=masked_test_code,
+                        test_case_info=item['test_cases']
+                    ))
         return organized_data

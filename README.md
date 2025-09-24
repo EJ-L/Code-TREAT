@@ -94,7 +94,41 @@ uv run scripts/run_evaluation.py
 ```
 
 **Note**: We provided the uv.lock and pyproject.toml, so you can easily reproduce the environment and run the experiments.
---- 
+
+---
+## Dataset
+## 📂 Datasets by Task
+
+Each TREAT task is backed by curated datasets hosted on the Hugging Face Hub: https://huggingface.co/Code-TREAT.  
+You can load them in two ways:
+
+1. **Via the `datasets` library**:
+```python
+from datasets import load_dataset
+ds = load_dataset("Code-TREAT/<dataset_name>")
+```
+
+2.	By downloading raw JSON directly from the raw/ directory of each dataset repo, and put them in the specific positions.
+
+⚡ For easier reproducibility of our testing questions, we also provide lite versions of each dataset (smaller subsets with fixed evaluation splits).
+These are highly recommended when benchmarking new models.
+
+## 📂 Datasets by Task
+
+Each task in TREAT is backed by curated datasets hosted on Hugging Face.  
+You can either use the **dataset name** directly with `load_dataset`, or download the raw JSON files from the `raw/` directory.  
+⚡ For easier reproducibility of our testing questions, we strongly recommend using the **lite versions**.
+
+| Task | Dataset | Reproducible & Lightweight | Description |
+|------|---------|-----------------------------|-------------|
+| **Code Generation (CG)** | [Code-TREAT/code_generation](https://huggingface.co/datasets/Code-TREAT/code_generation) | [Code-TREAT/code_generation_lite](https://huggingface.co/datasets/Code-TREAT/code_generation_lite) | From our self-collected HackerRank and GeeksforGeeks competitive programming dataset. Only GeeksforGeeks is stored here; HackerRank is included in Code-TREAT/code_translation as it is also part of the Translation task. |
+| **Code Summarization (CS)** | [Code-TREAT/code_summarization](https://huggingface.co/datasets/Code-TREAT/code_summarization) | [Code-TREAT/code_summarization_lite](https://huggingface.co/datasets/Code-TREAT/code_summarization_lite) | From self-collected GitHub projects created since 2023 and crawled in 2025. Contains crucial function–docstring pairs. |
+| **Code Translation (CT)** | [Code-TREAT/code_translation](https://huggingface.co/datasets/Code-TREAT/code_translation) | [Code-TREAT/code_translation_lite](https://huggingface.co/datasets/Code-TREAT/code_translation_lite) | From our HackerRank and GeeksforGeeks datasets. Includes PolyHumanEval implicitly via TREAT’s `benchmark_modules`. Related Paper: [Unraveling the Potential of LLMs in Code Translation](https://arxiv.org/abs/2410.09812). |
+| **Code Reasoning (CR)** | [Code-TREAT/code_reasoning](https://huggingface.co/datasets/Code-TREAT/code_reasoning) | [Code-TREAT/code_reasoning_lite](https://huggingface.co/datasets/Code-TREAT/code_reasoning_lite) | Extended from HackerRank and GeeksforGeeks datasets by masking inputs/outputs, designed to test LLM reasoning via prediction accuracy. |
+| **Code Review Generation (CRv)** | [Code-TREAT/code_review](https://huggingface.co/datasets/Code-TREAT/code_review) | [Code-TREAT/code_review_lite](https://huggingface.co/datasets/Code-TREAT/code_review_lite) | From self-collected GitHub projects created since 2023 and crawled in 2025. Contains diff–review pairs. |
+| **Test Generation (TG)** | [Code-TREAT/unit_test_generation](https://huggingface.co/datasets/Code-TREAT/unit_test_generation) | Supplement: `_supp` version adds **branch coverage info** | From [Code-Aware Prompting](https://arxiv.org/abs/2402.00097). The original dataset is available on [Figshare](https://figshare.com/articles/dataset/SymPrompt_Focal_Method_Benchmark_for_Unit_Test_Generation/25277314?file=44661979). |
+| **Vulnerability Detection (VD)** | [colin/PrimeVul](https://huggingface.co/datasets/colin/PrimeVul) | – | From [PrimeVul](https://github.com/DLVulDet/PrimeVul). We use a mirrored version on HF for convenience. Includes both single-function and paired-function variants. |
+
 ## Citation
 
 If you use TREAT in your research, please cite:

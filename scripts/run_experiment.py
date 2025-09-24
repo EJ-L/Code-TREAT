@@ -352,8 +352,8 @@ if __name__ == '__main__':
                         sampling_manifest_path=params.get('sampling_manifest_path'),
                     )
 
-                    from treat.runner.code_execution.runner import CodeExecutionRunner
-                    ct_runner = CodeExecutionRunner(task_config, 'input_prediction')
+                    from treat.runner.code_reasoning.runner import CodeReasoningRunner
+                    ct_runner = CodeReasoningRunner(task_config, 'input_prediction')
                     ct_runner.execute_task()
         if task_name == 'output_prediction':
             for dataset_langauge_map in params['datasets']:
@@ -373,8 +373,8 @@ if __name__ == '__main__':
                         sampling_manifest_path=params.get('sampling_manifest_path'),
                     )
 
-                    from treat.runner.code_execution.runner import CodeExecutionRunner
-                    ct_runner = CodeExecutionRunner(task_config, 'output_prediction')
+                    from treat.runner.code_reasoning.runner import CodeReasoningRunner
+                    ct_runner = CodeReasoningRunner(task_config, 'output_prediction')
                     ct_runner.execute_task()
 # for task, configuration in tasks:
 #     if task == 'code_translation':

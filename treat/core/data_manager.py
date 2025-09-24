@@ -28,10 +28,10 @@ class DatasetManager:
             from treat.runner.unit_test_generation.dataloader import DataLoader as UnitTestGenerationDataLoader
             return UnitTestGenerationDataLoader(self.dataset).load_data()
         if self.task_name == "input_prediction":
-            from treat.runner.code_execution.dataloader import DataLoader as InputPredictionDataLoader
+            from treat.runner.code_reasoning.dataloader import DataLoader as InputPredictionDataLoader
             return InputPredictionDataLoader(self.dataset, self.language).load_data()
         if self.task_name == "output_prediction":
-            from treat.runner.code_execution.dataloader import DataLoader as OutputPredictionDataLoader
+            from treat.runner.code_reasoning.dataloader import DataLoader as OutputPredictionDataLoader
             return OutputPredictionDataLoader(self.dataset, self.language).load_data()
         
         raise ValueError(f"Unknown task name: {self.task_name}")

@@ -29,27 +29,28 @@ model_specification:
   models: ["Qwen3-30B-A3B"]
   models: ["grok-3-mini"]
   models: ["deepseek-r1"]
-  models: ["glm-4-flash"]
   models: ["llama-4-scout"]
+  models: ["glm-4-flash"]
   temperature: 0.8
   top_k: 40
   top_p: 0.95
 
 tasks:
-  # - task: unit_test_generation
-  #   enabled: true
-  #   parameters:
-  #     datasets: [{'symprompt': 'python'}]
-  #     template_categories: ['direct']
-  #     test_samples: null
-  #     n_requests: 1
-  #     parallel_requests: 10
-  #     save_dir: "results"
-  #     sampling_mode: "random"
-  #     sample_size: 200
+  - task: unit_test_generation
+    enabled: false
+    parameters:
+      datasets: [{'symprompt': 'python'}]
+      template_categories: ['direct']
+      test_samples: null
+      n_requests: 1
+      parallel_requests: 10
+      save_dir: "results"
+      sampling_mode: "random"
+      sample_size: 200
 
-  #     sampling_seed: 42
-  #     sampling_manifest_path: null
+      sampling_seed: 42
+      sampling_manifest_path: null
+
   - task: code_translation
     enabled: false
     parameters:
@@ -107,7 +108,7 @@ tasks:
       sampling_manifest_path: ""
 
   - task: code_review_generation
-    enabled: true
+    enabled: false
     parameters:
       datasets: [{'github_2023': 'python'}, {'github_2023': 'go'}]
       template_categories: ['direct']
@@ -121,7 +122,7 @@ tasks:
       sampling_manifest_path: "replication_manifest_json/code_review_generation_manifest.json"
 
   - task: input_prediction
-    enabled: false
+    enabled: true
     parameters:
       datasets: [{'hackerrank': 'java'}, {'geeksforgeeks': 'python'}]
       template_categories: ['direct']
@@ -135,7 +136,7 @@ tasks:
       sampling_manifest_path: ""
 
   - task: output_prediction
-    enabled: false
+    enabled: true
     parameters:
       datasets: [{'hackerrank': 'python'}, {'geeksforgeeks': 'java'}]
       template_categories: ['direct']
