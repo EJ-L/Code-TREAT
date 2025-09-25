@@ -18,19 +18,23 @@ class DataLoader:
 
     def load_data(self):
         """Load all code generation data from the dataset"""
-        ds = load_dataset("Code-TREAT/code_generation")
+        if self.dataset == 'geeksforgeeks':
+            ds = load_dataset("Code-TREAT/code_generation")
+        elif self.dataset == 'hackerrank':
+            ds = load_dataset("Code-TREAT/code_generation")
+        else:
+            raise ValueError(f"Unknown dataset {self.dataset}")
         full_data = ds['test']
         organized_data = []
         for data in full_data:
             dataset = data['dataset']
-            lang = data['lang']
-            if lang != self.language or dataset != self.dataset:
+            if dataset != self.dataset:
                 continue
             _id = data['question_id']
             question_title=data['question_title']
             problem_description=data['question_content']
             difficulty=data['difficulty']
-            release_date=data['release_date']
+            release_date=data.get('release_date','')
             language_metadata = data[self.language]
 
             if dataset == 'hackerrank':
@@ -47,6 +51,7 @@ class DataLoader:
                 class_name=language_metadata.get('class_name', None),
             organized_data.append(Data(
                 id=_id,
+                dataset=dataset,
                 title=question_title,
                 problem_description=problem_description,
                 difficulty=difficulty,

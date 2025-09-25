@@ -63,7 +63,7 @@ tasks:
       sampling_mode: "manifest"
       sample_size: 3
       sampling_seed: 42
-      sampling_manifest_path: /Users/ericjohnli/Downloads/TREAT-refined/replication_manifest_json/code_translation_manifest.json
+      sampling_manifest_path: "replication_manifest_json/code_translation_manifest.json"
   
   - task: code_generation
     enabled: true
@@ -80,7 +80,7 @@ tasks:
       sampling_manifest_path: ""
     
   - task: vulnerability_detection
-    enabled: true
+    enabled: false
     parameters:
       datasets: ['primevul', 'primevul_pair']
       template_categories: ['direct']
@@ -91,10 +91,10 @@ tasks:
       sampling_mode: "manifest"
       sample_size: 3
       sampling_seed: 42
-      sampling_manifest_path: "/Users/ericjohnli/Downloads/TREAT-refined/results/vulnerability_detection_sample_manifest.json"
+      sampling_manifest_path: "/results/vulnerability_detection_sample_manifest.json"
 
   - task: code_summarization
-    enabled: true
+    enabled: false
     parameters:
       datasets: [{'github_2023': 'python'}, {'github_2023': 'java'}]
       template_categories: ['direct']
@@ -108,7 +108,7 @@ tasks:
       sampling_manifest_path: ""
 
   - task: code_review_generation
-    enabled: true
+    enabled: false
     parameters:
       datasets: [{'github_2023': 'python'}, {'github_2023': 'go'}]
       template_categories: ['direct']
@@ -122,7 +122,7 @@ tasks:
       sampling_manifest_path: "replication_manifest_json/code_review_generation_manifest.json"
 
   - task: input_prediction
-    enabled: true
+    enabled: false
     parameters:
       datasets: [{'hackerrank': 'java'}, {'geeksforgeeks': 'python'}]
       template_categories: ['direct']
@@ -136,7 +136,7 @@ tasks:
       sampling_manifest_path: ""
 
   - task: output_prediction
-    enabled: true
+    enabled: false
     parameters:
       datasets: [{'hackerrank': 'python'}, {'geeksforgeeks': 'java'}]
       template_categories: ['direct']

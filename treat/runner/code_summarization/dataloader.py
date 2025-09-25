@@ -10,9 +10,10 @@ class DataLoader:
         
     def load_data(self):
         organized_data = []
-        ds = load_dataset("Code-TREAT/code_summarization")
+        ds = load_dataset("Code-TREAT/code_summarization_lite")
         full_data = ds['test']
         for data in full_data:
             if data['dataset'] != self.dataset or data['lang'] != self.language:
                 continue
             organized_data.append(CodeSumData(data))
+        return organized_data
