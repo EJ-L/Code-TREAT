@@ -34,7 +34,7 @@ class TestGenerationRunner(BaseTaskRunner):
         print(f"   - Dataset: {getattr(data, 'dataset_name', 'unknown')}")
 
         try:
-            ref_key = RecordManager.make_ref_key(self.config.dataset, model_name, data.idx, self.config.template_categories, template.template_id)
+            ref_key = RecordManager.make_ref_key(self.config.dataset, model_name, data.key, self.config.template_categories, template.template_id)
             
             if ref_key is None:
                 return {"status": "skipped", "reason": "no_prompt_id"}
@@ -57,13 +57,11 @@ class TestGenerationRunner(BaseTaskRunner):
                 "ref_key": ref_key,
                 "lang": self.config.language,
                 "dataset": data.dataset_name,
-                "data_idx": data.idx,
                 "prompting_category": template.category,
                 "prompt_id": prompt_id,
                 "prompt_template": template.template_string,
                 "wrapped_text": wrapped_text,
                 "model_name": model_name,
-                "ground_truth": data.ground_truth,
                 "response": response_list,
             }
 
@@ -80,16 +78,14 @@ class TestGenerationRunner(BaseTaskRunner):
         model: Any,
         template: Template
     ) -> Tuple[Any, str]:
-
-        if data.dataset_name == 'primevul_pair':  
-            template_info = {
-                "code1": data.data1.func,
-                "code2": data.data2.func
-            }
-        elif data.dataset_name == 'primevul':
-            template_info = {
-                "code": data.func
-            }
-        
+        if data.class_name:
+            method_name = data.class_name + '.' + data.method_name
+        else:
+            method_name = data.method_name
+        template_info = {
+            "focal_code_context": data.type_context,
+            "focal_method_name": method_name,
+            "module_name": data.module_name
+        }
         result = template.get_prompt(model=model, **template_info)
         return result

@@ -23,7 +23,7 @@ class DataLoader:
         ds = load_dataset('Code-TREAT/code_translation')
         full_data = ds['test']
         for data in full_data:
-            if data['language'] != self.source_lang or data['dataset'] != self.dataset:
+            if data['dataset'] != self.dataset:
                 continue
             if data['dataset'] == 'hackerrank':
                 organized_data.append(HackerrankData(
@@ -31,7 +31,7 @@ class DataLoader:
                     title=data['question_title'],
                     difficulty=data['difficulty'],
                     domain=data.get("domain", "hr"),
-                    release_date=data['release_date'],
+                    release_date="",
                     source_code=data[self.source_lang]['solution'],
                 ))
             elif data['dataset'] == 'polyhumaneval':
