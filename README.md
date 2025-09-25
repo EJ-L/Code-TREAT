@@ -31,7 +31,7 @@ TREAT addresses key limitations in existing approaches with four main improvemen
 
 ## Insights from Evaluations
 
-Based on this framework, we evaluated over **25 state-of-the-art models** and uncovered key insights:
+Based on this framework, we evaluated over **26 state-of-the-art models** and uncovered key insights:
 
 - 📌 Current models show substantial **performance variation across programming tasks**.  
 - 📌 **Multi-modal language models** demonstrate limitations in UI code generation and modification.  

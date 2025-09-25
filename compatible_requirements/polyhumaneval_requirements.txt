@@ -1,0 +1,4 @@
+# Compatible requirements for PolyHumanEval environment
+# Generated for environment: polyhumaneval
+# Addresses package version conflicts
+

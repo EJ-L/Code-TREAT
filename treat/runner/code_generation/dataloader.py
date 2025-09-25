@@ -1,77 +1,59 @@
 """
-Data loading utilities for code translation tasks
+Data loading utilities for code generation tasks
 """
 from typing import Dict, List, Any, Optional, Iterator, Tuple
 import random
 import os
 import json
-from .data import HackerrankData, GeeksforGeeksData
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GFG_DATA_DIR = os.path.join(PROJECT_ROOT, "..", "data", "geeksforgeeks", "geeksforgeeks_filtered_valid.jsonl")
-HR_DATA_DIR = os.path.join(PROJECT_ROOT, "..", "data", "hackerrank", "hackerrank_filtered.jsonl")
+from .data import Data
+from datasets import load_dataset
 
 class DataLoader:
-    """Data loader for code translation with batching and filtering capabilities"""
+    """Data loader for code generation with batching and filtering capabilities"""
     
     def __init__(self, dataset: str, language: str):
         """Initialize the data loader with dataset path"""
         self.dataset = dataset
         self.language = language
 
-
     def load_data(self):
-        """Load all code translation data from the dataset"""
-        if self.dataset == 'geeksforgeeks':
-            return self.load_gfg()
-        if self.dataset == 'hackerrank':
-            return self.load_hr()
-            
-    def load_hr(self):
-        """Load HackerRank data"""
+        """Load all code generation data from the dataset"""
+        ds = load_dataset("Code-TREAT/code_generation")
+        full_data = ds['test']
         organized_data = []
-        with open(HR_DATA_DIR, 'r') as f:
-            data = [json.loads(line.strip()) for line in f]
-            for item in data:
-                problem_description = item['question_content']
-                if item.get('input_format', ""):
-                    problem_description += '\n' + item['input_format']
-                if item.get('output_format', ""):
-                    problem_description += '\n' + item['output_format']
-                
-                language_metadata = item[self.language]
+        for data in full_data:
+            dataset = data['dataset']
+            lang = data['lang']
+            if lang != self.language or dataset != self.dataset:
+                continue
+            _id = data['question_id']
+            question_title=data['question_title']
+            problem_description=data['question_content']
+            difficulty=data['difficulty']
+            release_date=data['release_date']
+            language_metadata = data[self.language]
+
+            if dataset == 'hackerrank':
                 template_head = language_metadata.get('template_head', '').strip()
                 template_body = language_metadata.get('template', '').strip()
-                template_tail = language_metadata.get('template_tail', '').strip()
-                starter_code = template_head + '\n' + template_body + '\n' + template_tail
+                driver_code = language_metadata.get('template_tail', '').strip()
+                starter_code = template_head + '\n' + template_body + '\n' + driver_code
                 class_name = language_metadata.get('class_name', None)
-                func_sign = language_metadata.get('func_sign', None)
-                
-                organized_data.append(HackerrankData(
-                    id=item['question_id'],
-                    title=item['question_title'],
-                    problem_description=problem_description,
-                    difficulty=item['difficulty'],
-                    release_date=item['release_date'],
-                    func_sign=func_sign,
-                    driver_code=template_tail,
-                    starter_code=starter_code,
-                    class_name=class_name,
-                ))
+                func_sign = language_metadata.get('func_sign', None)            
+            elif dataset == 'geeksforgeeks':
+                func_sign=language_metadata['func_sign'],
+                driver_code=language_metadata['initial_code'],
+                starter_code=language_metadata['initial_code'] + '\n' + language_metadata['user_code'],
+                class_name=language_metadata.get('class_name', None),
+            organized_data.append(Data(
+                id=_id,
+                title=question_title,
+                problem_description=problem_description,
+                difficulty=difficulty,
+                release_date=release_date,
+                func_sign=func_sign,
+                driver_code=driver_code,
+                starter_code=starter_code,
+                class_name=class_name,
+            ))
         return organized_data
-    
-    def load_gfg(self):
-        """Load PolyHumanEval data"""
-        with open(GFG_DATA_DIR, 'r') as f:
-            data = [json.loads(line.strip()) for line in f]
-            data = [GeeksforGeeksData(
-                id=item['question_id'],
-                question_title=item['question_title'],
-                problem_description=item['question_content'],
-                difficulty=item['difficulty'],
-                release_date=item['release_date'],
-                func_sign=item[self.language]['func_sign'],
-                driver_code=item[self.language]['initial_code'],
-                starter_code=item[self.language]['initial_code'] + '\n' + item[self.language]['user_code'],
-                class_name=item[self.language].get('class_name', None),
-            ) for item in data]
-        return data

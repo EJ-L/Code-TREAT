@@ -38,7 +38,8 @@ RESULTS_DIR = os.path.join(PROJECT_ROOT, "results", "symprompt")
 
 # Symprompt dataset specific paths - configured for TREAT setup
 SYMPROMPT_DATA_DIR = os.path.join(PROJECT_ROOT, "data", "symprompt")
-SYMPROMPT_REPOS_DIR = "/Users/ericjohnli/Downloads/RA_ARISE/TREAT/tests/unit_test_generation/Symprompt/test-apps"
+# SYMPROMPT_REPOS_DIR = "/Users/ericjohnli/Downloads/RA_ARISE/TREAT/tests/unit_test_generation/Symprompt/test-apps"
+SYMPROMPT_REPOS_DIR = os.path.join(SYMPROMPT_DATA_DIR, "test-apps")
 SYMPROMPT_VENVS_DIR = os.path.join(PROJECT_ROOT, "virtual_environments", "symprompt")
 FOCAL_METHODS_FILE = os.path.join(SYMPROMPT_DATA_DIR, "data", "focal_methods.jsonl")
 FOCAL_METHODS_WITH_BRANCHES = os.path.join(

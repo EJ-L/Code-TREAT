@@ -1,653 +1,517 @@
+"""
+Code Reasoning Evaluator for standalone evaluation of parsed responses.
+Uses the 2-step approach compatible extractors and proper Java/Python executors.
+"""
+
 from evaluators.utils.code_exec_java_executor import JavaExecutor
 from evaluators.utils.code_exec_python_executor import PythonExecutor
 import json
+import os
 import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 import time
-from typing import List, Dict, Tuple, Any, Optional
-import argparse
-import logging
+from typing import List, Dict, Tuple, Any
 from ast import literal_eval
-import re
 import numpy as np
-from tests.code_execution.evaluation.utils_general import pass_at_k, extract_prediction, parse_java_md, parse_python_md, handle_input_prediction_response, handle_output_prediction_response
-from tests.code_execution.evaluation.utils import find_output_prediction_files, find_input_prediction_files
 from tqdm import tqdm
-import os
 
-JAVA_CLS_NAME_DICT = {
-    6715: "Kaprekar",
-    6024: "AngryProf", 
-    19310: "Vic",
-    702766: "Compute", 
-    702678: "Solve", 
-    700428: "GfG", 
-    710277: "solver", 
-    700619: "Tree"
-}
-def remove_thinking_tag(response: str) -> str:
+
+class CodeReasoningEvaluator:
     """
-    Extract content after <thinking> and </thinking> tags from the response string.
-    Args:
-        response (str): Input string that contains thinking tags
-    Returns:
-        str: final response after removing the thinking
+    Standalone evaluator for code reasoning tasks.
+    Evaluates parsed responses using proper Java/Python executors with resume capability.
     """
-    try:
-        response = response.split("</think>")[-1]
-    except:
-        pass
-
-    return response
-
-# 搜索輸出 / 輸入 prediction 的起始位置
-_HEAD_RE = re.compile(
-    r'\{\s*"(input|output)[ _]prediction"\s*:\s*',
-    re.I  # ignore-case
-)
-
-def grab_prediction(text: str) -> Optional[Tuple[str, str]]:
-    """
-    抓出第一段 {"input/output_prediction": …}，
-    回傳 (完整片段, value 字串)；找不到就 None。
-    """
-    m = _HEAD_RE.search(text)
-    if not m:
-        return None
-
-    start = m.start()   # '{'
-    i     = m.end()     # 冒號後第一字元
-    depth = 1           # 已看到 1 個 {
-    in_str, esc = False, False
-
-    while i < len(text):
-        ch = text[i]
-
-        if in_str:                    # 在字串裏
-            if esc:
-                esc = False           # 上一個是跳脫符號，直接略過
-            elif ch == '\\':
-                esc = True            # 開始跳脫
-            elif ch == '"':
-                in_str = False        # 字串結束
-        else:                         # 不在字串裏
-            if ch == '"':
-                in_str = True
-            elif ch == '{':
-                depth += 1
-            elif ch == '}':
-                depth -= 1
-                if depth == 0:        # 找到配對的右括號
-                    fragment   = text[start : i + 1]
-                    value_part = text[m.end() : i]   # 冒號後到倒數 `}` 前
-                    return fragment, value_part.strip()
-        i += 1
-
-    return None   # 若跑到結尾 depth 仍 >0，表示 json 不完整
-
-def parse_json_md(markdown_text):
-    """
-    Extracts Java code enclosed in ```java ... ``` blocks from a markdown string.
-    Returns a list of code block strings.
-    """
-    pattern = r"```json\n(.*?)```"
-    matches = re.findall(pattern, markdown_text, re.DOTALL)
-    if matches and len(matches) == 1:
-        return matches[0], True
-    else:
-        return None
-
-def supplement_inputs_in_py(input_line: str, masked_code: str):
-    if not masked_code.startswith("inputs") and ('assert Solution().f(*inputs)' in masked_code or 'assert Solution().f(inputs)' in masked_code or 'assert f(*inputs)' in masked_code or 'assert f(inputs)' in masked_code):
-        return input_line + '\n' + masked_code
-    return masked_code
-
-def parse_response(resp: List[str], masked_query: str, mode: str="input", lang="python"):
-    parsed_responses = []
-    parsed_case = []
-    if mode == "input":          # ---------- input prediction ----------
-        key = "input_prediction"
-    else:                        # ---------- output prediction ----------
-        key = "output_prediction"
+    
+    # Class name mappings for Java problems
+    JAVA_CLS_NAME_DICT = {
+        6715: "Kaprekar",
+        6024: "AngryProf", 
+        19310: "Vic",
+        702766: "Compute", 
+        702678: "Solve", 
+        700428: "GfG", 
+        710277: "solver", 
+        700619: "Tree"
+    }
+    
+    def __init__(self, max_workers: int = 4, k_values: List[int] = None, max_responses_to_evaluate: int = None):
+        """
+        Initialize the evaluator
         
-    if lang == 'java':
-        # parse cases: -1: plain string that is probably wrong, 1 -> json format, 2 -> plain text starting with ```java or ```python starting with psvm, 3 -> plain string markdown, 4 -> json format w/o psvm, 5 -> ```java but not starting with psvm code, probably entire code`
-        for r in resp:
-            r = remove_thinking_tag(r)
-            if "```" in r and ("```java" in r or "```python" in r):
-                success = False
-                _tuple = parse_java_md(r)
-                if _tuple is not None:
-                    content, success = _tuple
-                if success:
-                    parsed_responses.append(content)
-                    parsed_case.append(2 if content.lstrip().startswith("public static void main") else 5)
-                    continue
-            try:
-                # grab_prediction 先嘗試 {"output_prediction": …}
-                # parse_json_md 處理 ```json ...``` 或破格式
-                json_r = grab_prediction(r) or parse_json_md(r)
-                if json_r is not None:
-                    r, _ = json_r
-            except Exception:
-                pass
+        Args:
+            max_workers: Number of parallel workers for evaluation
+            k_values: List of k values for pass@k calculation (defaults to [1, 5, 10])
+            max_responses_to_evaluate: Maximum number of responses from parsed_response to use for evaluation. 
+                                     If None, uses all available responses.
+        """
+        self.max_workers = max_workers
+        self.k_values = k_values or [1, 5, 10]
+        self.max_responses_to_evaluate = max_responses_to_evaluate
+    
+    def evaluate_file(self, input_file: str, output_file: str = None, resume: bool = True) -> float:
+        """
+        Evaluate parsed responses from input file
+        
+        Args:
+            input_file: Path to input JSONL file with parsed responses (in parsed/)
+            output_file: Path to output evaluation file (optional, auto-generated in evaluations/)
+            resume: Whether to resume from existing evaluation file
             
-            try:
-                try:
-                    r = json.loads(r)
-                except Exception:
-                    r = literal_eval(r)
-            except Exception:
-                pass
-            
-            if isinstance(r, dict) and key in r:
-                pred = r[key]
-                pred_str = str(pred).strip()
-                if pred_str.startswith("public static void main"):
-                    parsed_responses.append(pred_str)
-                    parsed_case.append(1)
-                else:
-                    parsed_responses.append(masked_query.replace("??", pred_str))
-                    parsed_case.append(4)
-            elif isinstance(r, str):
-                rs = r.strip()
-                if rs.startswith("public static void main"):
-                    parsed_responses.append(rs)
-                    parsed_case.append(2)
-                else:
-                    parsed_responses.append(rs)
-                    parsed_case.append(3)
-            else:
-                # 解析失敗，原樣丟回，可視需求決定是否 append
-                parsed_responses.append(r)
-                parsed_case.append(-1)
-    elif lang == 'python':
-        # 1 -> json + 
-        for r in resp:        
-            r = remove_thinking_tag(r)
-            if r.strip() == "":      
-                parsed_responses.append(masked_query.replace("??", "<ERROR>", 1))
-                parsed_case.append(-2)
-                continue
-            from_json = False
-            successful_response = None
-            parsed_response = extract_prediction(r, True)
-            # if parsed_response, further handle the json
-            if parsed_response:
-                successful_response = parsed_response[0][key]
-                from_json = True
-            else:
-                _tuple = parse_python_md(r)
-                if _tuple is not None:
-                    content, success = _tuple
-                    if success:
-                        successful_response = content[0]
-            if mode == 'input':
-                print("=====")
-                print(r)
-                if successful_response:
-                    final_parse, idx = handle_input_prediction_response(successful_response, from_json)
-                    parsed_responses.append(masked_query.replace("??", final_parse, 1))
-                    parsed_case.append(idx)
-                    print("+++++")
-                    print(parsed_responses[0])
-                else:
-                    parsed_responses.append(masked_query.replace("??", "<ERROR>", 1))
-                    parsed_case.append(-2)
-            if mode == 'output':
-                if successful_response:
-                    print(successful_response)
-                    final_parse, idx = handle_output_prediction_response(successful_response, from_json)
-                    parsed_responses.append(masked_query.replace("??", final_parse, 1))
-                    parsed_case.append(idx)
-                    print(parsed_responses[0])
-                else:
-                    parsed_responses.append(masked_query.replace("??", "<ERROR>", 1))
-                    parsed_case.append(-2)
-    else:
-        raise ValueError('Language apart from python and java are not supported')
-
-    return parsed_responses, parsed_case
-
-def parse_error_details(error_output: str) -> tuple:
-    """
-    Parse error output to extract error type and code for better reporting.
-    
-    Args:
-        error_output: Error message from execution
-        
-    Returns:
-        Tuple of (error_type, error_code)
-    """
-    if not error_output:
-        return "unknown", None
-    
-    error_output_lower = error_output.lower()
-    
-    # Compilation errors
-    if "compilation failed" in error_output_lower:
-        error_type = "compilation_error"
-        
-        # Extract specific compilation error codes
-        if "class, interface, enum, or record expected" in error_output_lower:
-            error_code = "SYNTAX_CLASS_EXPECTED"
-        elif "cannot find symbol" in error_output_lower:
-            error_code = "SYMBOL_NOT_FOUND"
-        elif "illegal start of expression" in error_output_lower:
-            error_code = "ILLEGAL_EXPRESSION_START"
-        elif "';' expected" in error_output_lower:
-            error_code = "SEMICOLON_EXPECTED"
-        elif "')' expected" in error_output_lower:
-            error_code = "PARENTHESIS_EXPECTED"
-        elif "'{' expected" in error_output_lower:
-            error_code = "BRACE_EXPECTED"
-        elif "incompatible types" in error_output_lower:
-            error_code = "TYPE_MISMATCH"
-        elif "unreachable statement" in error_output_lower:
-            error_code = "UNREACHABLE_STATEMENT"
-        elif "duplicate" in error_output_lower:
-            error_code = "DUPLICATE_DECLARATION"
+        Returns:
+            Average pass@1 score
+        """
+        # Get the root directory (where parsed/ folder is located)
+        # Assuming input_file is in parsed/file.jsonl
+        parsed_dir = os.path.dirname(input_file)
+        if os.path.basename(parsed_dir) == 'parsed':
+            root_dir = os.path.dirname(parsed_dir)
         else:
-            error_code = "OTHER_COMPILATION_ERROR"
-    
-    # Runtime errors
-    elif "runtime error" in error_output_lower:
-        error_type = "runtime_error"
+            # Fallback: assume input_file directory is the root
+            root_dir = parsed_dir
         
-        if "nullpointerexception" in error_output_lower:
-            error_code = "NULL_POINTER_EXCEPTION"
-        elif "arrayindexoutofboundsexception" in error_output_lower:
-            error_code = "ARRAY_INDEX_OUT_OF_BOUNDS"
-        elif "classcastexception" in error_output_lower:
-            error_code = "CLASS_CAST_EXCEPTION"
-        elif "arithmeticexception" in error_output_lower:
-            error_code = "ARITHMETIC_EXCEPTION"
-        elif "stackoverflowerror" in error_output_lower:
-            error_code = "STACK_OVERFLOW"
-        elif "outofmemoryerror" in error_output_lower:
-            error_code = "OUT_OF_MEMORY"
-        elif "assertionerror" in error_output_lower:
-            error_code = "ASSERTION_FAILED"
-        else:
-            error_code = "OTHER_RUNTIME_ERROR"
-    
-    # Timeout errors
-    elif "timeout" in error_output_lower:
-        error_type = "timeout_error"
-        error_code = "EXECUTION_TIMEOUT"
-    
-    # Execution errors (general)
-    elif "execution error" in error_output_lower:
-        error_type = "execution_error"
-        error_code = "GENERAL_EXECUTION_ERROR"
-    
-    # Python-specific errors
-    elif "syntaxerror" in error_output_lower:
-        error_type = "syntax_error"
-        error_code = "PYTHON_SYNTAX_ERROR"
-    elif "indentationerror" in error_output_lower:
-        error_type = "syntax_error"
-        error_code = "PYTHON_INDENTATION_ERROR"
-    elif "nameerror" in error_output_lower:
-        error_type = "runtime_error"
-        error_code = "PYTHON_NAME_ERROR"
-    elif "typeerror" in error_output_lower:
-        error_type = "runtime_error"
-        error_code = "PYTHON_TYPE_ERROR"
-    elif "valueerror" in error_output_lower:
-        error_type = "runtime_error"
-        error_code = "PYTHON_VALUE_ERROR"
-    elif "indexerror" in error_output_lower:
-        error_type = "runtime_error"
-        error_code = "PYTHON_INDEX_ERROR"
-    elif "keyerror" in error_output_lower:
-        error_type = "runtime_error"
-        error_code = "PYTHON_KEY_ERROR"
-    elif "attributeerror" in error_output_lower:
-        error_type = "runtime_error"
-        error_code = "PYTHON_ATTRIBUTE_ERROR"
-    
-    else:
-        error_type = "unknown"
-        error_code = "UNCLASSIFIED_ERROR"
-    
-    return error_type, error_code
-
-def parse_generations(filename: str, directory: str) -> List[Dict[str, Any]]:
-    """Parse generation file and return the full path of parsed jsonl file"""
-    # Ensure target directory exists
-    os.makedirs(directory, exist_ok=True)
-    basename = os.path.basename(filename).replace(".jsonl", "_parsed.jsonl")
-    out_path = os.path.abspath(os.path.join(directory, basename))
-    with open(filename, "r", encoding="utf-8") as f, open(out_path, "w", encoding="utf-8") as f2:
-        for line_num, line in enumerate(f.readlines(), 1):
-            try:     
-                print(line_num)
-
-                json_line = json.loads(line.strip())
-
-                if all(key in json_line for key in ['code/function', 'lang', 'id']):
-                    try:
-                        masked_query = literal_eval(json_line['test_case_metadata'])[json_line['task']]
-                    except:
-                        masked_query = json_line['test_case_metadata'][json_line['task']]
-                    
-                    # parse the response generated by LLMs, task will be either input_prediction/output_predidction
-                    if 'parsed_response' in json_line:
-                        pass
-                    else:
-                        print("HERE")
-                        json_line['parsed_response'], json_line['parsed_case'] = parse_response(json_line['response'], masked_query, json_line['task'].split("_")[0], json_line['lang'])
-                        print(json_line['model_name'])
-                        # json_line['parsed_response'] = [
-                        #     base64.b64encode(pickle.dumps(r)).decode("ascii") for r in json_line['parsed_response']
-                        # ]
-                    f2.write(json.dumps(json_line) + '\n')
-            except json.JSONDecodeError as e:
-                print(json_line['response'])
-                raise Exception(e)
-    return out_path
-
-def evaluate_single_generation(args_tuple: Tuple[Dict[str, Any], List[int]]) -> Dict[str, Any]:
-    """Evaluate a single generation - designed for multiprocessing"""
-    test_data, k_values = args_tuple
-    try:
-        test_masked_code = test_data['code/function']
-        lang = test_data['lang']
-        problem_id = test_data['id']
-        test_generations = test_data.get('parsed_response', [])
+        # Setup evaluations directory following framework structure
+        evaluations_dir = os.path.join(root_dir, "evaluations")
+        os.makedirs(evaluations_dir, exist_ok=True)
         
-        test_case_idx = test_data['test_case_idx']
-        # Get class name from problem ID
-        cls_name = JAVA_CLS_NAME_DICT.get(problem_id, "Solution")
+        # Generate output file path if not provided
+        if output_file is None:
+            input_basename = os.path.basename(input_file).replace('.jsonl', '')
+            output_file = os.path.join(evaluations_dir, f"{input_basename}_evaluation.jsonl")
+        
+        # Check for resume
+        if resume and os.path.exists(output_file):
+            print(f"Output file {output_file} already exists. Skipping evaluation.")
+            # Load existing results to calculate average pass@1
+            return self._calculate_existing_pass_at_1(output_file)
+        
+        # Load generations
+        print(f"Loading generations from {input_file}")
+        generations = self._load_generations(input_file)
+        
+        if not generations:
+            print("No generations found to evaluate")
+            return 0.0
+        
+        print(f"Evaluating {len(generations)} generations")
+        
+        # Evaluate generations
+        results = self._evaluate_generations(generations)
+        
+        # Save results and calculate metrics
+        self._save_evaluation_results(results, output_file, generations, input_file)
+        
+        # Calculate and return average pass@1
+        avg_pass_at_1 = self._calculate_average_pass_at_1(results)
+        print(f"Average pass@1: {avg_pass_at_1:.4f}")
+        
+        return avg_pass_at_1
+    
+    def _load_generations(self, input_file: str) -> List[Dict[str, Any]]:
+        """Load generations from input JSONL file"""
+        generations = []
         try:
-            input_line = test_data['test_case_metadata']['input']
+            with open(input_file, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
+                    try:
+                        json_line = json.loads(line.strip())
+                        # Validate required fields
+                        if self._validate_generation_line(json_line):
+                            generations.append(json_line)
+                        else:
+                            print(f"Warning: Line {line_num} missing required fields")
+                    except json.JSONDecodeError as e:
+                        print(f"Error parsing line {line_num}: {e}")
+                        continue
+        except FileNotFoundError:
+            print(f"Input file not found: {input_file}")
+        except Exception as e:
+            print(f"Error loading generations: {e}")
+        
+        return generations
+    
+    def _validate_generation_line(self, json_line: Dict[str, Any]) -> bool:
+        """Validate that a generation line has required fields"""
+        required_fields = ['code/function', 'lang', 'id', 'parsed_response']
+        return all(field in json_line for field in required_fields)
+    
+    def _evaluate_generations(self, generations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Evaluate all generations using multiprocessing"""
+        # Detect language for optimal executor selection
+        java_heavy = any('java' in gen.get('lang', '').lower() for gen in generations[:10])
+        ExecutorClass = ThreadPoolExecutor if java_heavy else ProcessPoolExecutor
+        
+        executor_name = "ThreadPoolExecutor" if java_heavy else "ProcessPoolExecutor"
+        print(f"Using {executor_name} with {self.max_workers} workers")
+        
+        results = []
+        start_time = time.time()
+        
+        with ExecutorClass(max_workers=self.max_workers) as executor:
+            # Submit all evaluation tasks
+            future_to_data = {
+                executor.submit(self._evaluate_single_generation, (gen, self.k_values, self.max_responses_to_evaluate)): gen 
+                for gen in generations
+            }
+            
+            # Collect results with progress tracking
+            with tqdm(total=len(generations), desc="Evaluating generations", unit="problem") as pbar:
+                for future in as_completed(future_to_data):
+                    gen_data = future_to_data[future]
+                    try:
+                        result = future.result()
+                        results.append(result)
+                        
+                        # Update progress bar
+                        success_rate = f"{result['success_count']}/{result['total_tests']}"
+                        pbar.set_postfix({
+                            'Problem': f"P{result['problem_id']}",
+                            'Success': success_rate,
+                            'Lang': result['lang']
+                        })
+                        pbar.update(1)
+                        
+                    except Exception as e:
+                        print(f"Error evaluating problem {gen_data.get('id', 'unknown')}: {e}")
+                        # Create error result
+                        error_result = {
+                            'problem_id': gen_data.get('id', 'unknown'),
+                            'lang': gen_data.get('lang', 'unknown'),
+                            'success_count': 0,
+                            'total_tests': 0,
+                            'pass_at_k': {},
+                            'error': str(e),
+                            'results': []
+                        }
+                        results.append(error_result)
+                        pbar.update(1)
+        
+        end_time = time.time()
+        print(f"Evaluation completed in {end_time - start_time:.2f} seconds")
+        
+        return results
+    
+    def _evaluate_single_generation(self, args_tuple: Tuple[Dict[str, Any], List[int], Any]) -> Dict[str, Any]:
+        """Evaluate a single generation - designed for multiprocessing"""
+        test_data, k_values, max_responses_to_evaluate = args_tuple
+        
+        try:
+            # Extract test information
+            test_masked_code = test_data['code/function']
+            lang = test_data['lang']
+            problem_id = test_data['id']
+            test_generations = test_data.get('parsed_response', [])
+            
+            # Limit number of responses if specified
+            if max_responses_to_evaluate is not None and len(test_generations) > max_responses_to_evaluate:
+                test_generations = test_generations[:max_responses_to_evaluate]
+            
+            test_case_idx = test_data.get('test_case_idx', 1)
+            
+            # Get class name for Java
+            cls_name = self.JAVA_CLS_NAME_DICT.get(problem_id, "Solution")
+            
+            # Get input line for Python supplement
+            input_line = self._extract_input_line(test_data)
+            
+            # Create executor based on language
+            if lang.lower() == 'java':
+                executor = JavaExecutor(test_masked_code, cls_name) 
+            elif lang.lower() == 'python':
+                executor = PythonExecutor(test_masked_code)
+            else:
+                raise ValueError(f"Language not supported: {lang}")
+            
+            # Execute test cases
+            results = []
+            for gen in test_generations:
+                if lang.lower() == 'python':
+                    gen = self._supplement_inputs_in_py(input_line, gen)
+                
+                exec_code, success, output = executor.execute_test_case(gen)
+                
+                # Parse error details
+                error_type = "none" if success else "unknown"
+                error_code = None
+                if not success:
+                    error_type, error_code = self._parse_error_details(output)
+                
+                results.append({
+                    'prompt_category': test_data.get('prompt_category', 'unknown'),
+                    'prompt_id': test_data.get('prompt_id', 'unknown'),
+                    'test_case_id': test_case_idx,
+                    'success': success,
+                    'output': output,
+                    'error_type': error_type,
+                    'error_code': error_code,
+                    'exec_code': exec_code
+                })
+            
+            # Calculate pass@k scores
+            success_results = [r['success'] for r in results]
+            pass_at_k_scores = {}
+            for k in k_values:
+                if k <= len(success_results):
+                    n = len(success_results)
+                    c = sum(success_results)
+                    pass_at_k_scores[f'pass@{k}'] = self._pass_at_k(n, c, k)
+            
+            return {
+                'problem_id': problem_id,
+                'lang': lang,
+                'success_count': sum(1 for r in results if r['success']),
+                'total_tests': len(results),
+                'pass_at_k': pass_at_k_scores,
+                'results': results
+            }
+            
+        except Exception as e:
+            return {
+                'problem_id': test_data.get('id', 'unknown'),
+                'lang': test_data.get('lang', 'unknown'),
+                'success_count': 0,
+                'total_tests': 0,
+                'pass_at_k': {},
+                'error': str(e),
+                'results': []
+            }
+    
+    def _extract_input_line(self, test_data: Dict[str, Any]) -> str:
+        """Extract input line from test case metadata"""
+        try:
+            metadata = test_data.get('test_case_metadata', {})
+            if isinstance(metadata, str):
+                metadata = literal_eval(metadata)
+            return metadata.get('input', '')
         except:
             try:
-                input_line = literal_eval(test_data['test_case_metadata'])['input']
+                metadata = json.loads(test_data.get('test_case_metadata', '{}'))
+                return metadata.get('input', '')
             except:
-                input_line = json.loads(test_data['test_case_metadata'])['input']
-        # Create executor based on language
-        if lang.lower() == 'java':
-            executor = JavaExecutor(test_masked_code, cls_name) 
-        elif lang.lower() == 'python':
-            executor = PythonExecutor(test_masked_code)
+                return ''
+    
+    def _supplement_inputs_in_py(self, input_line: str, masked_code: str) -> str:
+        """Supplement inputs in Python code if needed"""
+        if not masked_code.startswith("inputs") and (
+            'assert Solution().f(*inputs)' in masked_code or 
+            'assert Solution().f(inputs)' in masked_code or 
+            'assert f(*inputs)' in masked_code or 
+            'assert f(inputs)' in masked_code
+        ):
+            return input_line + '\n' + masked_code
+        return masked_code
+    
+    def _parse_error_details(self, error_output: str) -> Tuple[str, str]:
+        """Parse error output to extract error type and code"""
+        if not error_output:
+            return "unknown", "UNCLASSIFIED_ERROR"
+        
+        error_output_lower = error_output.lower()
+        
+        # Compilation errors
+        if "compilation failed" in error_output_lower:
+            error_type = "compilation_error"
+            if "cannot find symbol" in error_output_lower:
+                error_code = "SYMBOL_NOT_FOUND"
+            elif "';' expected" in error_output_lower:
+                error_code = "SEMICOLON_EXPECTED"
+            elif "incompatible types" in error_output_lower:
+                error_code = "TYPE_MISMATCH"
+            else:
+                error_code = "OTHER_COMPILATION_ERROR"
+        
+        # Runtime errors
+        elif "runtime error" in error_output_lower:
+            error_type = "runtime_error"
+            if "nullpointerexception" in error_output_lower:
+                error_code = "NULL_POINTER_EXCEPTION"
+            elif "arrayindexoutofboundsexception" in error_output_lower:
+                error_code = "ARRAY_INDEX_OUT_OF_BOUNDS"
+            elif "assertionerror" in error_output_lower:
+                error_code = "ASSERTION_FAILED"
+            else:
+                error_code = "OTHER_RUNTIME_ERROR"
+        
+        # Timeout errors
+        elif "timeout" in error_output_lower:
+            error_type = "timeout_error"
+            error_code = "EXECUTION_TIMEOUT"
+        
+        # Python-specific errors
+        elif "syntaxerror" in error_output_lower:
+            error_type = "syntax_error"
+            error_code = "PYTHON_SYNTAX_ERROR"
+        elif "indentationerror" in error_output_lower:
+            error_type = "syntax_error"
+            error_code = "PYTHON_INDENTATION_ERROR"
+        elif "nameerror" in error_output_lower:
+            error_type = "runtime_error"
+            error_code = "PYTHON_NAME_ERROR"
+        elif "typeerror" in error_output_lower:
+            error_type = "runtime_error"
+            error_code = "PYTHON_TYPE_ERROR"
+        elif "valueerror" in error_output_lower:
+            error_type = "runtime_error"
+            error_code = "PYTHON_VALUE_ERROR"
+        elif "indexerror" in error_output_lower:
+            error_type = "runtime_error"
+            error_code = "PYTHON_INDEX_ERROR"
+        elif "keyerror" in error_output_lower:
+            error_type = "runtime_error"
+            error_code = "PYTHON_KEY_ERROR"
+        elif "attributeerror" in error_output_lower:
+            error_type = "runtime_error"
+            error_code = "PYTHON_ATTRIBUTE_ERROR"
+        
         else:
-            raise ValueError("Language not suporrted")
-        # Execute test cases
-        results = []
+            error_type = "unknown"
+            error_code = "UNCLASSIFIED_ERROR"
         
-        for _, gen in enumerate(test_generations):
-            if lang.lower() == 'python':
-                gen = supplement_inputs_in_py(input_line, gen)
-            exec_code, success, output  = executor.execute_test_case(gen)
-            # Parse error details for better reporting
-            error_type = "none" if success else "unknown"
-            error_code = None
-            
-            if not success:
-                error_type, error_code = parse_error_details(output)
-            
-            results.append({
-                'prompt_category': test_data['prompt_category'],
-                'prompt_id': test_data['prompt_id'],
-                'test_case_id': test_case_idx,
-                'success': success,
-                'output': output,
-                'error_type': error_type,
-                'error_code': error_code,
-                'exec_code': exec_code
-            })
-        
-        # Calculate pass@k scores
-        success_results = [r['success'] for r in results]
-        pass_at_k_scores = {}
-        for k in k_values:
-            if k <= len(success_results):
-                n = len(success_results)
-                c = sum(success_results)
-                pass_at_k_scores[f'pass@{k}'] = pass_at_k(n, c, k)
-        
-        return {
-            'problem_id': problem_id,
-            'lang': lang,
-            'success_count': sum(1 for r in results if r['success']),
-            'total_tests': len(results),
-            'pass_at_k': pass_at_k_scores,
-            'results': results
-        }
-        
-    except Exception as e:
-        return {
-            'problem_id': test_data.get('id', 'unknown'),
-            'lang': test_data.get('lang', 'unknown'),
-            'success_count': 0,
-            'total_tests': 0,
-            'pass_at_k': {},
-            'error': str(e),
-            'results': []
-        }
-
-def evaluate_generations(filename: str, max_workers: int = 4, output_file: str = None, k_values: List[int] = [1, 5, 10]) -> List[Dict[str, Any]]:
-    """Evaluate all generations using ProcessPoolExecutor"""
-    generations = []
-    with open(filename, "r", encoding="utf-8") as f:
-        for line in f.readlines()[:]:
-            json_line = json.loads(line)
-            generations.append(json_line)
-
+        return error_type, error_code
     
-    # Parse generations
-    # generations = parse_generations(filename)
+    def _pass_at_k(self, n: int, c: int, k: int) -> float:
+        """Calculate pass@k score"""
+        if n - c < k:
+            return 1.0
+        return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))
     
-    if not generations:
-        return []
-    
-    # Detect if this is primarily Java code
-    java_heavy = any('java' in gen.get('lang', '').lower() for gen in generations[:10])
-    
-    # Use ThreadPoolExecutor for Java (better for I/O bound compilation) and ProcessPoolExecutor for Python
-    ExecutorClass = ThreadPoolExecutor if java_heavy else ProcessPoolExecutor
-    
-    # Evaluate using selected executor
-    results = []
-    start_time = time.time()
-    
-    with ExecutorClass(max_workers=max_workers) as executor:
-        # Submit all tasks with k_values
-        future_to_data = {executor.submit(evaluate_single_generation, (gen, k_values)): gen for gen in generations}
-        
-        # Collect results as they complete with progress bar
-        with tqdm(total=len(generations), desc="Evaluating generations", unit="problem") as pbar:
-            for future in as_completed(future_to_data):
-                gen_data = future_to_data[future]
-                try:
-                    result = future.result()
-                    results.append(result)
-                    
-                    # Update progress bar with current problem info
-                    success_rate = f"{result['success_count']}/{result['total_tests']}"
-                    pbar.set_postfix({
-                        'Current': f"P{result['problem_id']}",
-                        'Success': success_rate,
-                        'Lang': result['lang']
-                    })
-                    pbar.update(1)
-                    
-                except Exception as e:
-                    results.append({
-                        'problem_id': gen_data.get('id', 'unknown'),
-                        'lang': gen_data.get('lang', 'unknown'),
-                        'success_count': 0,
-                        'total_tests': 0,
-                        'pass_at_k': {},
-                        'error': str(e),
-                        'results': []
-                    })
-                    pbar.update(1)
-    
-    hash_table = {}          
-    pass_at_1 = []
-    for result in results:
-        r = result['results']
-        key = f"{result['problem_id']},{result['lang']},{str(r[0]['prompt_category'])},{str(r[0]['prompt_id'])},{str(r[0]['test_case_id'])}"
-        hash_table[key] = (result['pass_at_k'], r)        
-        pass_at_1.append(result['pass_at_k']['pass@1'])
-    # Save results if output file specified
-    if output_file:
+    def _save_evaluation_results(self, results: List[Dict[str, Any]], output_file: str, 
+                               generations: List[Dict[str, Any]], input_file: str):
+        """Save evaluation results to output file and annotated generations file"""
+        # Save evaluation results
         with open(output_file, 'w', encoding='utf-8') as f:
             for result in results:
                 f.write(json.dumps(result) + '\n')
-    with open(str(filename).replace(".jsonl", "_evaluated.jsonl"), "w", encoding="utf-8") as f:
-        for line in generations:
-            key = f"{line['id']},{line['lang']},{str(line['prompt_category'])},{str(line['prompt_id'])},{str(line['test_case_idx'])}"
-            line['metrics'] = hash_table[key][0]
-            line['results'] = hash_table[key][1]
-            f.write(json.dumps(line) + '\n')        
-    return sum(pass_at_1) / len(pass_at_1)
-
-def print_summary(results: List[Dict[str, Any]], k_values: List[int] = [1, 5, 10]):
-    """Print evaluation summary"""
-    total_problems = len(results)
-    total_success = sum(r['success_count'] for r in results)
-    total_tests = sum(r['total_tests'] for r in results)
-    
-    java_results = [r for r in results if r['lang'].lower() == 'java']
-    python_results = [r for r in results if r['lang'].lower() == 'python']
-    
-    print("\n" + "="*50)
-    print("EVALUATION SUMMARY")
-    print("="*50)
-    print(f"Total Problems: {total_problems}")
-    print(f"Total Test Cases: {total_tests}")
-    print(f"Total Successful: {total_success}")
-    print(f"Overall Success Rate: {total_success/total_tests*100:.2f}%" if total_tests > 0 else "No tests executed")
-    
-    # Calculate overall pass@k scores
-    all_pass_at_k = {}
-    for k in k_values:
-        valid_results = [r for r in results if f'pass@{k}' in r.get('pass_at_k', {})]
-        if valid_results:
-            avg_pass_k = np.mean([r['pass_at_k'][f'pass@{k}'] for r in valid_results])
-            all_pass_at_k[f'pass@{k}'] = avg_pass_k
-    
-    print(f"\nOverall Pass@K Scores:")
-    for k, score in all_pass_at_k.items():
-        print(f"  {k}: {score:.4f}")
-    
-    if java_results:
-        java_success = sum(r['success_count'] for r in java_results)
-        java_total = sum(r['total_tests'] for r in java_results)
-        print(f"\nJava: {len(java_results)} problems, {java_success}/{java_total} tests passed "
-              f"({java_success/java_total*100:.2f}%)" if java_total > 0 else "")
         
-        # Java pass@k scores
-        java_pass_at_k = {}
-        for k in k_values:
-            valid_java = [r for r in java_results if f'pass@{k}' in r.get('pass_at_k', {})]
-            if valid_java:
-                java_pass_at_k[f'pass@{k}'] = np.mean([r['pass_at_k'][f'pass@{k}'] for r in valid_java])
+        # Create hash table for quick lookup
+        hash_table = {}
+        for result in results:
+            if result['results']:  # Only if there are actual results
+                r = result['results']
+                key = f"{result['problem_id']},{result['lang']},{r[0]['prompt_category']},{r[0]['prompt_id']},{r[0]['test_case_id']}"
+                hash_table[key] = (result['pass_at_k'], r)
         
-        for k, score in java_pass_at_k.items():
-            print(f"  Java {k}: {score:.4f}")
-    
-    if python_results:
-        python_success = sum(r['success_count'] for r in python_results)
-        python_total = sum(r['total_tests'] for r in python_results)
-        print(f"\nPython: {len(python_results)} problems, {python_success}/{python_total} tests passed "
-              f"({python_success/python_total*100:.2f}%)" if python_total > 0 else "")
+        # Save annotated generations file in evaluations/ directory  
+        input_basename = os.path.basename(input_file)
+        evaluated_file = os.path.join(os.path.dirname(output_file), input_basename)
+        with open(evaluated_file, "w", encoding="utf-8") as f:
+            for line in generations:
+                # Add evaluation metrics to each generation
+                key = f"{line['id']},{line['lang']},{line.get('prompt_category', 'unknown')},{line.get('prompt_id', 'unknown')},{line.get('test_case_idx', 1)}"
+                if key in hash_table:
+                    line['metrics'] = hash_table[key][0]
+                    line['results'] = hash_table[key][1]
+                else:
+                    line['metrics'] = {}
+                    line['results'] = []
+                f.write(json.dumps(line) + '\n')
         
-        # Python pass@k scores
-        python_pass_at_k = {}
-        for k in k_values:
-            valid_python = [r for r in python_results if f'pass@{k}' in r.get('pass_at_k', {})]
-            if valid_python:
-                python_pass_at_k[f'pass@{k}'] = np.mean([r['pass_at_k'][f'pass@{k}'] for r in valid_python])
+        print(f"Evaluation results saved to: {output_file}")
+        print(f"Annotated generations saved to: {evaluated_file}")
+    
+    def _calculate_average_pass_at_1(self, results: List[Dict[str, Any]]) -> float:
+        """Calculate average pass@1 from results"""
+        pass_at_1_scores = []
+        for result in results:
+            if 'pass@1' in result.get('pass_at_k', {}):
+                pass_at_1_scores.append(result['pass_at_k']['pass@1'])
         
-        for k, score in python_pass_at_k.items():
-            print(f"  Python {k}: {score:.4f}")
-    
-    # Show error statistics
-    error_results = [r for r in results if 'error' in r]
-    if error_results:
-        print(f"\nProcessing errors encountered: {len(error_results)} problems")
-        for r in error_results[:5]:  # Show first 5 errors
-            print(f"  - Problem {r['problem_id']}: {r['error']}")
-    
-    # Show detailed error type statistics
-    print(f"\nError Type Statistics:")
-    error_type_counts = {}
-    error_code_counts = {}
-    
-    for result in results:
-        for test_result in result.get('results', []):
-            if not test_result['success']:
-                error_type = test_result.get('error_type', 'unknown')
-                error_code = test_result.get('error_code', 'UNKNOWN')
-                
-                error_type_counts[error_type] = error_type_counts.get(error_type, 0) + 1
-                error_code_counts[error_code] = error_code_counts.get(error_code, 0) + 1
-    
-    if error_type_counts:
-        print(f"  Error Types:")
-        for error_type, count in sorted(error_type_counts.items(), key=lambda x: x[1], reverse=True):
-            print(f"    {error_type}: {count}")
+        if not pass_at_1_scores:
+            return 0.0
         
-        print(f"  Top Error Codes:")
-        for error_code, count in sorted(error_code_counts.items(), key=lambda x: x[1], reverse=True)[:10]:
-            print(f"    {error_code}: {count}")
-    else:
-        print(f"  No execution errors found!")
-
-def main():
-    parser = argparse.ArgumentParser(description='Evaluate code generations using ProcessPoolExecutor')
-    parser.add_argument('input_file', help='Input JSONL file with generations')
-    parser.add_argument('--workers', type=int, default=4, help='Number of worker processes (default: 4)')
-    parser.add_argument('--output', help='Output file for results (JSONL format)')
-    parser.add_argument('--log-file', help='Log file path (logs to console if not specified)')
-    parser.add_argument('--k-values', type=int, nargs='+', default=[1, 5, 10], 
-                        help='List of k values for pass@k calculation (default: 1 5 10)')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
+        return sum(pass_at_1_scores) / len(pass_at_1_scores)
     
-    args = parser.parse_args()
+    def _calculate_existing_pass_at_1(self, output_file: str) -> float:
+        """Calculate pass@1 from existing evaluation file"""
+        try:
+            results = []
+            with open(output_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    try:
+                        result = json.loads(line.strip())
+                        results.append(result)
+                    except:
+                        continue
+            
+            return self._calculate_average_pass_at_1(results)
+        except:
+            return 0.0
     
-    # Setup logging
-    setup_logging(args.log_file, args.verbose)
+    def print_evaluation_summary(self, results: List[Dict[str, Any]]):
+        """Print evaluation summary statistics"""
+        if not results:
+            print("No results to summarize")
+            return
+        
+        total_problems = len(results)
+        total_success = sum(r['success_count'] for r in results)
+        total_tests = sum(r['total_tests'] for r in results)
+        
+        java_results = [r for r in results if r['lang'].lower() == 'java']
+        python_results = [r for r in results if r['lang'].lower() == 'python']
+        
+        print("\n" + "="*50)
+        print("CODE REASONING EVALUATION SUMMARY")
+        print("="*50)
+        print(f"Total Problems: {total_problems}")
+        print(f"Total Test Cases: {total_tests}")
+        print(f"Total Successful: {total_success}")
+        
+        if total_tests > 0:
+            print(f"Overall Success Rate: {total_success/total_tests*100:.2f}%")
+        else:
+            print("Overall Success Rate: No tests executed")
+        
+        # Calculate overall pass@k scores
+        all_pass_at_k = {}
+        for k in self.k_values:
+            valid_results = [r for r in results if f'pass@{k}' in r.get('pass_at_k', {})]
+            if valid_results:
+                avg_pass_k = np.mean([r['pass_at_k'][f'pass@{k}'] for r in valid_results])
+                all_pass_at_k[f'pass@{k}'] = avg_pass_k
+        
+        print(f"\nOverall Pass@K Scores:")
+        for k, score in all_pass_at_k.items():
+            print(f"  {k}: {score:.4f}")
+        
+        # Language-specific statistics
+        if java_results:
+            java_success = sum(r['success_count'] for r in java_results)
+            java_total = sum(r['total_tests'] for r in java_results)
+            if java_total > 0:
+                print(f"\nJava: {len(java_results)} problems, {java_success}/{java_total} tests passed ({java_success/java_total*100:.2f}%)")
+        
+        if python_results:
+            python_success = sum(r['success_count'] for r in python_results)
+            python_total = sum(r['total_tests'] for r in python_results)
+            if python_total > 0:
+                print(f"Python: {len(python_results)} problems, {python_success}/{python_total} tests passed ({python_success/python_total*100:.2f}%)")
+        
+        # Error statistics
+        error_type_counts = {}
+        for result in results:
+            for test_result in result.get('results', []):
+                if not test_result['success']:
+                    error_type = test_result.get('error_type', 'unknown')
+                    error_type_counts[error_type] = error_type_counts.get(error_type, 0) + 1
+        
+        if error_type_counts:
+            print(f"\nTop Error Types:")
+            for error_type, count in sorted(error_type_counts.items(), key=lambda x: x[1], reverse=True)[:5]:
+                print(f"  {error_type}: {count}")
+
+
+if __name__ == "__main__":
+    # Example usage
+    # Input file should be in parsed/ directory
+    # Output will be automatically saved in evaluations/ directory
     
-    # Run evaluation
-    results = evaluate_generations(args.input_file, args.workers, args.output, args.k_values)
+    evaluator = CodeReasoningEvaluator(max_workers=8)
     
-    # Print summary
-    print_summary(results, args.k_values)
-
-if __name__ == '__main__':
-    # main()
-    # print(grab_prediction("{\"output_prediction\": \"public static void main(String[] args) {\n    step[] steps = new step[2];\n    steps[0] = new step();\n    steps[0].departure = 10;\n    steps[0].travelTime = 4;\n    steps[0].distance = 0;\n    steps[0].pickedUp = 0;\n    steps[0].dropped = 0;\n    steps[0].carried = 0;\n    steps[1] = new step();\n    steps[1].departure = 5;\n    steps[1].travelTime = 3;\n    steps[1].distance = 0;\n    steps[1].pickedUp = 0;\n    steps[1].dropped = 0;\n    steps[1].carried = 0;\n    passenger[] passengers = new passenger[2];\n    passengers[0] = new passenger();\n    passengers[0].arrival = 2;\n    passengers[0].start = 0;\n    passengers[0].dest = 1;\n    passengers[1] = new passenger();\n    passengers[1].arrival = 1;\n    passengers[1].start = 0;\n    passengers[1].dest = 1;\n    assert f(steps, passengers) == 12;\n}\"}"))
-    # evaluate_generations("/Users/ericjohnli/Downloads/RA_ARISE/TREAT/save/CodeExecutionParsedV2/output_prediction_Claude-3.5-Haiku-20241022_java_fixed.jsonl", 10, "inspect.jsonl")
-    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    SAVE_DIR = os.path.join(CURRENT_DIR, "..", "..", "..", "save")
-    CODEEXEC_DIR = os.path.join(SAVE_DIR, "CodeExecution")
-    PARSED_DIR = os.path.join(SAVE_DIR, "CodeExecutionParsed")
-    PARSED_FIXED_DIR = os.path.join(SAVE_DIR, "CodeExecutionParsedV2")
-    # filename = "/Users/ericjohnli/Downloads/RA_ARISE/TREAT/save/output_prediction_GPT-5_python.jsonl"
-    # parse_generations(filename, PARSED_DIR)
-    # files = find_output_prediction_files(CODEEXEC_DIR, '', 'python')
-    # for file in files:
-    #     parse_generations(file, PARSED_DIR)
-    files = find_output_prediction_files(PARSED_FIXED_DIR, mode='fix', lang='python')
-    # files = find_input_prediction_files(PARSED_FIXED_DIR, mode='fix', lang='python')
-    # files = ["/Users/ericjohnli/Downloads/RA_ARISE/TREAT/save/CodeExecutionParsedV2/output_prediction_GPT-5_python_fixed.jsonl"]
-    # print(files)
-    for file in files:
-        print(file.name)
-        if 'GPT-5' in file.name:
-            continue
-    #     # if file.name.find('Claude-Sonnet-4') != -1 or file.name.find('Llama-3.3-70B-Instruct') != -1:
-    #     #     print("SKIPPED")
-    #     #     continue
-        # Use optimized worker count: more workers for Java with ThreadPoolExecutor
-        workers = 8 if 'java' in file.name else 5
-        evaluate_generations(file, workers, file.name.replace(".jsonl", "_debug.jsonl"))
-
-
-
+    # Evaluate from parsed/generations.jsonl 
+    # Output automatically goes to evaluations/
+    avg_pass_at_1 = evaluator.evaluate_file(
+        input_file="parsed/output_prediction_generations.jsonl"
+        # output_file will be auto-generated in evaluations/ directory
+    )
+    
+    print(f"Final average pass@1: {avg_pass_at_1:.4f}")

@@ -55,8 +55,8 @@ VIRTUAL_ENVS_DIR = PROJECT_ROOT / "virtual_environments" / "symprompt"
 SYMPROMPT_DATA_FILE = PROJECT_ROOT / "data" / "symprompt" / "data" / "focal_methods.jsonl"
 
 # Use existing RA_ARISE test-apps temporarily
-RA_ARISE_TEST_APPS = Path("/Users/ericjohnli/Downloads/RA_ARISE/TREAT/tests/unit_test_generation/Symprompt/test-apps")
-RA_ARISE_VENVS = Path("/Users/ericjohnli/Downloads/RA_ARISE/TREAT/tests/unit_test_generation/venvs")
+# RA_ARISE_TEST_APPS = Path("/Users/ericjohnli/Downloads/RA_ARISE/TREAT/tests/unit_test_generation/Symprompt/test-apps")
+RA_ARISE_TEST_APPS = PROJECT_ROOT / "data" / "symprompt" / "test-apps"
 
 # Project name mappings based on RA_ARISE setup_venv.sh
 PROJECT_NAME_DIR_MAP = {

@@ -9,8 +9,7 @@ class Data:
     @property
     def dataset_name(self):
         return self.dataset
-        
-        
+
 class PolyHumanEvalData(Data):
     def __init__(self, id, source_code):
         super().__init__(id, dataset="polyhumaneval", domain="polyhumaneval")        

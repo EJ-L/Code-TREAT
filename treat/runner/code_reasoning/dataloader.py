@@ -6,15 +6,7 @@ import random
 import os
 import json
 from .data import Data
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GFG_DATA_DIRS = [
-    os.path.join(PROJECT_ROOT, "..", "data", "geeksforgeeks", "code_execution", "java.jsonl"), 
-    os.path.join(PROJECT_ROOT, "..", "data", "geeksforgeeks", "code_execution", "python.jsonl")
-]
-HR_DATA_DIRS = [
-    os.path.join(PROJECT_ROOT, "..", "data", "hackerrank", "code_execution", "java.jsonl"), 
-    os.path.join(PROJECT_ROOT, "..", "data", "hackerrank", "code_execution", "python.jsonl")
-]
+from datasets import load_dataset
 
 class DataLoader:
     """Data loader for code reasoning with batching and filtering capabilities"""
@@ -23,56 +15,25 @@ class DataLoader:
         """Initialize the data loader with dataset path"""
         self.dataset = dataset
         self.language = language
-
-
-    def load_data(self):
-        """Load all code reasoning data from the dataset"""
-        if self.dataset == 'geeksforgeeks':
-            return self.load_gfg()
-        if self.dataset == 'hackerrank':
-            return self.load_hr()
-            
-    def load_hr(self):
-        """Load HackerRank data"""
-        organized_data = []
-        for path in HR_DATA_DIRS:
-            with open(path, 'r', encoding='utf-8') as f:
-                data = [json.loads(line.strip()) for line in f]
-                for item in data:
-                    _id = item['question_id']
-                    difficulty = item['difficulty']
-                    masked_test_code = item['masked_test_code']
-                    # for test_case in item['test_cases']:
-                    organized_data.append(Data(
-                        _id=_id,
-                        dataset=self.dataset,
-                        difficulty=difficulty,
-                        language=self.language,
-                        function=masked_test_code,
-                        test_case_info=item['test_cases']
-                    ))
-        return organized_data
     
-    def load_gfg(self):
-        """Load PolyHumanEval data"""
+    def load_data(self):
+        ds = load_dataset("Code-TREAT/code_reasoning")
+        full_data = ds['test']
         organized_data = []
-        for path in GFG_DATA_DIRS:
-            with open(path, 'r', encoding='utf-8') as f:
-                data = [json.loads(line.strip()) for line in f]
-                for item in data:
-                    _id = item['question_id']
-                    difficulty = item['difficulty']
-                    masked_test_code = item['masked_test_code']
-                    _id = item['question_id']
-                    difficulty = item['difficulty']
-                    masked_test_code = item['masked_test_code']
-                    # for test_case in item['test_cases']:
-                    organized_data.append(Data(
-                        _id=_id,
-                        dataset=self.dataset,
-                        difficulty=difficulty,
-                        language=self.language,
-                        function=masked_test_code,
-                        test_case_info=item['test_cases']
-                    ))
+        for data in full_data:
+            dataset = data['dataset']
+            lang = data['lang']
+            if lang != self.language or dataset != self.dataset:
+                continue
+            _id = data['question_id']
+            difficulty = data['difficulty']
+            masked_test_code = data['masked_test_code']
+            organized_data.append(Data(
+                _id=_id,
+                dataset=self.dataset,
+                difficulty=difficulty,
+                language=self.language,
+                function=masked_test_code,
+                test_case_info=data['test_cases']
+            ))
         return organized_data

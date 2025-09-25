@@ -7,9 +7,7 @@ from .data import LLM4UTData, SymPromptData
 from .utils.prompt_line_utils import *
 from extractors.tree_sitter_extraction_utils.java_tree_sitter_utils import parse_param_declaration_from_method_code, parse_fields_from_class_code,is_method_public
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SYMPROMPT_DATA_DIR = os.path.join(PROJECT_ROOT, "..", "data", "symprompt", "data")
-
-
+from datasets import load_dataset
 
 # borrowed from LLM4UT's generate_prompts
 PROFILER = cProfile.Profile()
@@ -112,23 +110,32 @@ class DataLoader:
             raise NotImplementedError(f"Project is not supported")
     
     def load_symprompt_data(self):
-        with open(os.path.join(SYMPROMPT_DATA_DIR, "focal_methods.jsonl"), "r") as reader:
-            for line in reader.readlines():
-                d = json.loads(line.strip())
-                data_id = d["prompt_id"]
-                project_name = d['project']
-                # if project_name not in []
-                module_name = d['module']
-                class_name = d['class']
-                method_name = d['method']
-                focal_method = d['focal_method_txt']
-                focal_method_globals = d['globals']
-                type_context = d['type_context']
-                d_uid = f"{project_name}_{module_name}_{class_name}_{method_name}"
-                _data = SymPromptData(
-                    'symprompt', 'python', d_uid, data_id, project_name, module_name, class_name, method_name, focal_method, focal_method_globals, type_context
-                )
-                self.test_data.append(_data)
+        ds = load_dataset("Code-TREAT/unit_test_generation")
+        full_data = ds['test']
+        for data in full_data:
+            data_id = data["prompt_id"]
+            project_name = data['project']
+            module_name = data['module']
+            class_name = data['class']
+            method_name = data['method']
+            focal_method = data['focal_method_txt']
+            focal_method_globals = data['globals']
+            type_context = data['type_context']
+            d_uid = f"{project_name}_{module_name}_{class_name}_{method_name}"
+            _data = SymPromptData(
+                'symprompt', 
+                'python', 
+                d_uid, 
+                data_id, 
+                project_name, 
+                module_name, 
+                class_name,
+                method_name,
+                focal_method,
+                focal_method_globals, 
+                type_context
+            )
+            self.test_data.append(_data)
         return self.test_data
 
     def load_d4j_data(self, model_type='api'):

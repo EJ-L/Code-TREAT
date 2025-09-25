@@ -136,7 +136,7 @@ tasks:
       sampling_manifest_path: ""
 
   - task: output_prediction
-    enabled: true
+    enabled: false
     parameters:
       datasets: [{'hackerrank': 'python'}, {'geeksforgeeks': 'java'}]
       template_categories: ['direct']

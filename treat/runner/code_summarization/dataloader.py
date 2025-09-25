@@ -1,28 +1,18 @@
 from pathlib import Path
 import json
 from .data import CodeSumData
+from datasets import load_dataset
 
 class DataLoader:
     def __init__(self, dataset: str, language: str,):
         self.dataset = dataset
         self.language = language
-
-    def _get_file_path(self) -> Path:
-        """Generate full file path for the language-specific data file."""
-        dataset_dirs = {
-            "github_2023": Path("/Users/ericjohnli/Downloads/RA_ARISE/TREAT/tests/code_summarization/parsed_functions"),
-        }
-        dataset_filename = {
-            "github_2023": f"parsed_{self.language}_functions.jsonl",
-        }
-        return dataset_dirs[self.dataset] / dataset_filename[self.dataset]
-    
+        
     def load_data(self):
-        file_path = self._get_file_path()
-        if not file_path.exists():
-            raise FileNotFoundError(f"Data file not found: {file_path}")
-        data = []
-        with open(file_path) as reader:
-            for line in reader:
-                data.append(CodeSumData(json.loads(line)))
-        return data
+        organized_data = []
+        ds = load_dataset("Code-TREAT/code_summarization")
+        full_data = ds['test']
+        for data in full_data:
+            if data['dataset'] != self.dataset or data['lang'] != self.language:
+                continue
+            organized_data.append(CodeSumData(data))

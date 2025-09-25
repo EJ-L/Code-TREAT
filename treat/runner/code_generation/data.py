@@ -12,12 +12,3 @@ class Data:
         self.starter_code = starter_code
         self.class_name = class_name
         self.domain = domain
-
-class GeeksforGeeksData(Data):
-    def __init__(self, id, question_title, problem_description, difficulty, release_date, func_sign, driver_code, starter_code, class_name=None):
-        super().__init__(id, "geeksforgeeks", question_title, problem_description, difficulty, release_date, func_sign, driver_code, starter_code, class_name, "geeksforgeeks")
-        
-            
-class HackerrankData(Data):
-    def __init__(self, id, title, problem_description, difficulty, release_date, func_sign, driver_code, starter_code, class_name=None):
-        super().__init__(id, "hackerrank", title, problem_description, difficulty, release_date, func_sign, driver_code, starter_code, class_name, "hackerrank")
