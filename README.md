@@ -109,14 +109,7 @@ ds = load_dataset("Code-TREAT/<dataset_name>")
 ```
 
 2.	By downloading raw JSON directly from the raw/ directory of each dataset repo, and put them in the specific positions.
-
-⚡ For easier reproducibility of our testing questions, we also provide lite versions of each dataset (smaller subsets with fixed evaluation splits).
-These are highly recommended when benchmarking new models.
-
-## 📂 Datasets by Task
-
-Each task in TREAT is backed by curated datasets hosted on Hugging Face.  
-You can either use the **dataset name** directly with `load_dataset`, or download the raw JSON files from the `raw/` directory.  
+ 
 ⚡ For easier reproducibility of our testing questions, we strongly recommend using the **lite versions**.
 
 | Task | Dataset | Reproducible & Lightweight | Description |
@@ -127,7 +120,7 @@ You can either use the **dataset name** directly with `load_dataset`, or downloa
 | **Code Reasoning (CR)** | [Code-TREAT/code_reasoning](https://huggingface.co/datasets/Code-TREAT/code_reasoning) | [Code-TREAT/code_reasoning_lite](https://huggingface.co/datasets/Code-TREAT/code_reasoning_lite) | Extended from HackerRank and GeeksforGeeks datasets by masking inputs/outputs, designed to test LLM reasoning via prediction accuracy. |
 | **Code Review Generation (CRv)** | [Code-TREAT/code_review](https://huggingface.co/datasets/Code-TREAT/code_review) | [Code-TREAT/code_review_lite](https://huggingface.co/datasets/Code-TREAT/code_review_lite) | From self-collected GitHub projects created since 2023 and crawled in 2025. Contains diff–review pairs. |
 | **Test Generation (TG)** | [Code-TREAT/unit_test_generation](https://huggingface.co/datasets/Code-TREAT/unit_test_generation) | Supplement: `_supp` version adds **branch coverage info** | From [Code-Aware Prompting](https://arxiv.org/abs/2402.00097). The original dataset is available on [Figshare](https://figshare.com/articles/dataset/SymPrompt_Focal_Method_Benchmark_for_Unit_Test_Generation/25277314?file=44661979). |
-| **Vulnerability Detection (VD)** | [colin/PrimeVul](https://huggingface.co/datasets/colin/PrimeVul) | – | From [PrimeVul](https://github.com/DLVulDet/PrimeVul). We use a mirrored version on HF for convenience. Includes both single-function and paired-function variants. |
+| **Vulnerability Detection (VD)** | [colin/PrimeVul](https://huggingface.co/datasets/colin/PrimeVul) | reproduce through TREAT's `replication_manifest_json/replicate_vd.json` | From [PrimeVul](https://github.com/DLVulDet/PrimeVul). We use a mirrored version on HF for convenience. Includes both single-function and paired-function variants. |
 
 ## Citation
 
