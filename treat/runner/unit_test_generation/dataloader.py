@@ -97,8 +97,9 @@ def get_prompt_info(data, template_category, template_id):
 
     
 class DataLoader:
-    def __init__(self, dataset):
+    def __init__(self, dataset, reproduce: bool = True):
         self.dataset = dataset
+        self.reproduce = reproduce
         self.test_data = []
     
     def load_data(self):
@@ -110,7 +111,8 @@ class DataLoader:
             raise NotImplementedError(f"Project is not supported")
     
     def load_symprompt_data(self):
-        ds = load_dataset("Code-TREAT/unit_test_generation")
+        dataset_name = "Code-TREAT/unit_test_generation"
+        ds = load_dataset(dataset_name)
         full_data = ds['test']
         for data in full_data:
             data_id = data["prompt_id"]

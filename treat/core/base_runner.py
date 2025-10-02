@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Any, Optional, Tuple, Iterable, Union
+from typing import Dict, List, Any, Optional, Tuple, Iterable, Union, Set
 import threading
 import concurrent.futures
 from collections import defaultdict
@@ -29,6 +29,7 @@ class TaskConfig:
     n_requests: int = 1
     parallel_requests: Optional[int] = None
     save_dir: str = "results"
+    reproduce: bool = True
 
     # --- Sampling / Replication controls ---
     sampling_mode: Optional[str] = None            # "random" | "manifest" | None
@@ -41,7 +42,12 @@ class BaseTaskRunner(ABC):
 
     def __init__(self, config: TaskConfig):
         self.config = config
-        self.dataset_manager = DatasetManager(self.get_task_name(), self.config.dataset, self.config.language)
+        self.dataset_manager = DatasetManager(
+            self.get_task_name(),
+            self.config.dataset,
+            self.config.language,
+            reproduce=self.config.reproduce,
+        )
         # Normalize dataset name for record manager to unify similar datasets
         normalized_dataset = self._get_normalized_dataset_name(self.config.dataset)
         self.record_manager = RecordManager(self.get_task_name(), normalized_dataset, self.config.save_dir)
@@ -122,28 +128,90 @@ class BaseTaskRunner(ABC):
     # ---- Sampling manifest logic -------------------------------------------
 
     def _manifest_default_path(self) -> str:
-        fname = f"{self.get_task_name()}_sample_manifest.json"
-        return os.path.join(self.config.save_dir, fname)
+        dataset_name = str(self.config.dataset) if self.config.dataset is not None else "dataset"
+        dataset_safe = dataset_name.replace(os.sep, "_").replace("/", "_")
+        fname = f"{dataset_safe}_sample_manifest.json"
+        return os.path.join(self.config.save_dir, self.get_task_name(), fname)
 
     def _save_sampling_manifest(self, items: List[Any]):
         """Save the sampled dataset metadata so the experiment can be replayed."""
         path = self.config.sampling_manifest_path or self._manifest_default_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
+        existing_items: List[Dict[str, Any]] = []
+        dataset_stats: Dict[str, Dict[str, Any]] = {}
+
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    manifest_data = json.load(f)
+                if manifest_data.get("task") == self.get_task_name():
+                    existing_items = manifest_data.get("items", []) or []
+                    dataset_stats = manifest_data.get("dataset_stats", {}) or {}
+            except Exception:
+                existing_items = []
+                dataset_stats = {}
+
+        current_dataset_names: Set[str] = set()
+        current_entries: List[Dict[str, Any]] = []
+
+        for d in items:
+            dataset_name = getattr(d, "dataset_name", getattr(d, "dataset", None))
+            if dataset_name is None:
+                dataset_name = "unknown"
+            elif not isinstance(dataset_name, str):
+                dataset_name = str(dataset_name)
+            current_dataset_names.add(dataset_name)
+            current_entries.append({
+                "dataset": dataset_name,
+                "id": self._resolve_item_id(d),
+            })
+
+        # Drop stale entries for datasets included in this run
+        filtered_existing = [
+            entry for entry in existing_items
+            if entry.get("dataset") not in current_dataset_names
+        ]
+
+        merged_items = filtered_existing + current_entries
+
+        total_candidates_current = len(self.dataset)
+        timestamp = datetime.utcnow().isoformat() + "Z"
+
+        for dataset_name in current_dataset_names:
+            dataset_stats[dataset_name] = {
+                "total_candidates": total_candidates_current,
+                "sample_size": sum(1 for entry in current_entries if entry.get("dataset") == dataset_name),
+                "sampling_mode": "random",
+                "sampling_seed": self.config.sampling_seed,
+                "timestamp": timestamp,
+            }
+
+        combined_sample_size = len(merged_items)
+        combined_total_candidates = sum(stat.get("total_candidates", 0) for stat in dataset_stats.values())
+
         manifest = {
             "task": self.get_task_name(),
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "total_candidates": len(self.dataset),
-            "sample_size": len(items),
+            "timestamp": timestamp,
+            "total_candidates": combined_total_candidates,
+            "sample_size": combined_sample_size,
             "sampling_mode": "random",
             "sampling_seed": self.config.sampling_seed,
-            "items": [
-                {"dataset": getattr(d, "dataset_name", None), "id": getattr(d, "idx", None)}
-                for d in items
-            ],
+            "items": merged_items,
+            "dataset_stats": dataset_stats,
         }
         with open(path, "w", encoding="utf-8") as f:
             json.dump(manifest, f, ensure_ascii=False, indent=2)
         print(f"[{self.get_task_name()}] Wrote sampling manifest to: {path}")
+
+    @staticmethod
+    def _resolve_item_id(item: Any) -> Any:
+        """Attempt to extract a stable identifier from a dataset item."""
+        for attr in ("idx", "key", "id", "composite_id", "prompt_id"):
+            if hasattr(item, attr):
+                value = getattr(item, attr, None)
+                if value is not None:
+                    return value
+        return None
 
     def _load_sampling_manifest(self) -> Optional[List[Dict[str, Any]]]:
         """Load a previously saved manifest and return item descriptors."""
@@ -181,9 +249,13 @@ class BaseTaskRunner(ABC):
                     # Strategy 1: Use idx if available (standard approach)
                     if hasattr(d, "idx"):
                         data_id = getattr(d, "idx", None)
+
+                    # Strategy 2: Prefer explicit key attribute for custom identifiers
+                    if data_id is None and hasattr(d, "key"):
+                        data_id = getattr(d, "key", None)
                     
-                    # Strategy 2: For code review data, try composite_id matching
-                    elif hasattr(d, "composite_id"):
+                    # Strategy 3: For code review data, try composite_id matching
+                    if data_id is None and hasattr(d, "composite_id"):
                         composite_id = getattr(d, "composite_id", None)
                         # Check if any manifest entry's ID matches this composite_id
                         for entry in entries:
@@ -191,9 +263,9 @@ class BaseTaskRunner(ABC):
                                 data_id = composite_id
                                 break
                     
-                    # Strategy 3: Fallback to other common ID attributes
+                    # Strategy 4: Fallback to other common ID attributes
                     if data_id is None:
-                        for attr in ["id", "idx", "key"]:
+                        for attr in ["key", "id", "idx", "prompt_id"]:
                             if hasattr(d, attr):
                                 data_id = getattr(d, attr, None)
                                 break

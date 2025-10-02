@@ -44,6 +44,7 @@ def create_vulnerability_detection_config(
     sample_size: Optional[int] = None,
     sampling_seed: Optional[int] = 42,
     sampling_manifest_path: Optional[str] = None,
+    reproduce: bool = True,
 ) -> TaskConfig:
     return TaskConfig(
         models=models,
@@ -58,6 +59,7 @@ def create_vulnerability_detection_config(
         sample_size=sample_size,
         sampling_seed=sampling_seed,
         sampling_manifest_path=sampling_manifest_path,
+        reproduce=reproduce,
     )
 
 
@@ -75,6 +77,7 @@ def create_code_generation_config(
     sample_size: Optional[int] = None,
     sampling_seed: Optional[int] = 42,
     sampling_manifest_path: Optional[str] = None,
+    reproduce: bool = True,
 ) -> TaskConfig:
     return TaskConfig(
         models=models,
@@ -89,6 +92,7 @@ def create_code_generation_config(
         sample_size=sample_size,
         sampling_seed=sampling_seed,
         sampling_manifest_path=sampling_manifest_path,
+        reproduce=reproduce,
     )
 
 
@@ -106,6 +110,7 @@ def create_code_translation_config(
     sample_size: Optional[int] = None,
     sampling_seed: Optional[int] = 42,
     sampling_manifest_path: Optional[str] = None,
+    reproduce: bool = True,
 ) -> TaskConfig:
     return TaskConfig(
         models=models,
@@ -120,6 +125,7 @@ def create_code_translation_config(
         sample_size=sample_size,
         sampling_seed=sampling_seed,
         sampling_manifest_path=sampling_manifest_path,
+        reproduce=reproduce,
     )
 
 
@@ -137,6 +143,7 @@ def create_unit_test_generation_config(
     sample_size: Optional[int] = None,
     sampling_seed: Optional[int] = 42,
     sampling_manifest_path: Optional[str] = None,
+    reproduce: bool = True,
 ) -> TaskConfig:
     return TaskConfig(
         models=models,
@@ -151,6 +158,7 @@ def create_unit_test_generation_config(
         sample_size=sample_size,
         sampling_seed=sampling_seed,
         sampling_manifest_path=sampling_manifest_path,
+        reproduce=reproduce,
     )
 
 
@@ -168,6 +176,7 @@ def create_code_summarization_config(
     sample_size: Optional[int] = None,
     sampling_seed: Optional[int] = 42,
     sampling_manifest_path: Optional[str] = None,
+    reproduce: bool = True,
 ) -> TaskConfig:
     return TaskConfig(
         models=models,
@@ -182,6 +191,7 @@ def create_code_summarization_config(
         sample_size=sample_size,
         sampling_seed=sampling_seed,
         sampling_manifest_path=sampling_manifest_path,
+        reproduce=reproduce,
     )
 
 
@@ -199,6 +209,7 @@ def create_code_review_generation_config(
     sample_size: Optional[int] = None,
     sampling_seed: Optional[int] = 42,
     sampling_manifest_path: Optional[str] = None,
+    reproduce: bool = True,
 ) -> TaskConfig:
     return TaskConfig(
         models=models,
@@ -213,6 +224,7 @@ def create_code_review_generation_config(
         sample_size=sample_size,
         sampling_seed=sampling_seed,
         sampling_manifest_path=sampling_manifest_path,
+        reproduce=reproduce,
     )
 
 
@@ -241,6 +253,7 @@ if __name__ == "__main__":
                         sample_size=params.get("sample_size"),
                         sampling_seed=params.get("sampling_seed", 42),
                         sampling_manifest_path=params.get("sampling_manifest_path"),
+                        reproduce=params.get("reproduce", True),
                     )
 
                     from treat.runner.unit_test_generation.runner import (
@@ -265,6 +278,7 @@ if __name__ == "__main__":
                         sample_size=params.get("sample_size"),
                         sampling_seed=params.get("sampling_seed", 42),
                         sampling_manifest_path=params.get("sampling_manifest_path"),
+                        reproduce=params.get("reproduce", True),
                     )
 
                     from treat.runner.code_translation.runner import (
@@ -289,6 +303,7 @@ if __name__ == "__main__":
                         sample_size=params.get("sample_size"),
                         sampling_seed=params.get("sampling_seed", 42),
                         sampling_manifest_path=params.get("sampling_manifest_path"),
+                        reproduce=params.get("reproduce", True),
                     )
 
                     from treat.runner.code_generation.runner import CodeGenerationRunner
@@ -310,6 +325,7 @@ if __name__ == "__main__":
                     sample_size=params.get("sample_size"),
                     sampling_seed=params.get("sampling_seed", 42),
                     sampling_manifest_path=params.get("sampling_manifest_path"),
+                    reproduce=params.get("reproduce", True),
                 )
 
                 from treat.runner.vulnerability_detection.runner import (
@@ -334,6 +350,7 @@ if __name__ == "__main__":
                         sample_size=params.get("sample_size"),
                         sampling_seed=params.get("sampling_seed", 42),
                         sampling_manifest_path=params.get("sampling_manifest_path"),
+                        reproduce=params.get("reproduce", True),
                     )
 
                     from treat.runner.code_summarization.runner import (
@@ -358,6 +375,7 @@ if __name__ == "__main__":
                         sample_size=params.get("sample_size"),
                         sampling_seed=params.get("sampling_seed", 42),
                         sampling_manifest_path=params.get("sampling_manifest_path"),
+                        reproduce=params.get("reproduce", True),
                     )
 
                     from treat.runner.code_review_generation.runner import (
@@ -382,6 +400,7 @@ if __name__ == "__main__":
                         sample_size=params.get("sample_size"),
                         sampling_seed=params.get("sampling_seed", 42),
                         sampling_manifest_path=params.get("sampling_manifest_path"),
+                        reproduce=params.get("reproduce", True),
                     )
 
                     from treat.runner.code_reasoning.runner import CodeReasoningRunner
@@ -404,6 +423,7 @@ if __name__ == "__main__":
                         sample_size=params.get("sample_size"),
                         sampling_seed=params.get("sampling_seed", 42),
                         sampling_manifest_path=params.get("sampling_manifest_path"),
+                        reproduce=params.get("reproduce", True),
                     )
 
                     from treat.runner.code_reasoning.runner import CodeReasoningRunner

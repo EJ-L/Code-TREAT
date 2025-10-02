@@ -53,6 +53,7 @@ CURRENT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = CURRENT_DIR.parent
 VIRTUAL_ENVS_DIR = PROJECT_ROOT / "virtual_environments" / "symprompt"
 SYMPROMPT_DATA_FILE = PROJECT_ROOT / "data" / "symprompt" / "data" / "focal_methods.jsonl"
+COMPATIBLE_REQS_DIR = PROJECT_ROOT / "compatible_requirements"
 
 # Use existing RA_ARISE test-apps temporarily
 # RA_ARISE_TEST_APPS = Path("/Users/ericjohnli/Downloads/RA_ARISE/TREAT/tests/unit_test_generation/Symprompt/test-apps")
@@ -311,77 +312,94 @@ class SympromptEnvironmentManager:
         logger.info(f"Installing dependencies for {project_name}...")
         
         try:
-            # 1. Install project-specific setup dependencies first (for projects without requirements.txt)
-            project_config = PROJECT_SPECIFIC_DEPS.get(project_name, {})
-            setup_deps = project_config.get("setup_deps", [])
+            # Check for compatible requirements file first (PRIORITY)
+            compatible_reqs_file = COMPATIBLE_REQS_DIR / f"{project_name}_requirements.txt"
             
-            if setup_deps:
-                logger.info(f"  Installing setup dependencies from configuration")
-                for dep in setup_deps:
-                    subprocess.run([
-                        str(venv_pip), "install", dep
-                    ], check=True, capture_output=True)
-            
-            # 2. Install from requirements.txt (either from repo or copy from test-apps)
-            requirements_file = repo_path / "requirements.txt"
-            venv_requirements = venv_path / "requirements.txt"
-            
-            if project_config.get("requirements_file") and requirements_file.exists():
-                logger.info(f"  Copying and installing from test-apps requirements.txt")
-                # Copy requirements.txt to venv for persistence
-                subprocess.run(["cp", str(requirements_file), str(venv_requirements)], check=True)
+            if compatible_reqs_file.exists():
+                logger.info(f"  ✓ Using compatible requirements from {compatible_reqs_file.name}")
                 subprocess.run([
-                    str(venv_pip), "install", "-r", str(venv_requirements)
+                    str(venv_pip), "install", "-r", str(compatible_reqs_file)
                 ], check=True, capture_output=True)
-            elif requirements_file.exists():
-                logger.info(f"  Installing from existing requirements.txt")
-                subprocess.run([
-                    str(venv_pip), "install", "-r", str(requirements_file)
-                ], check=True, capture_output=True)
+                
+                # Copy compatible requirements to venv for reference
+                venv_requirements = venv_path / "compatible_requirements.txt"
+                subprocess.run(["cp", str(compatible_reqs_file), str(venv_requirements)], check=True)
+                
+            else:
+                # Fallback to original complex installation logic
+                logger.info(f"  ⚠ No compatible requirements found, using fallback installation method")
+                
+                # 1. Install project-specific setup dependencies first (for projects without requirements.txt)
+                project_config = PROJECT_SPECIFIC_DEPS.get(project_name, {})
+                setup_deps = project_config.get("setup_deps", [])
+                
+                if setup_deps:
+                    logger.info(f"  Installing setup dependencies from configuration")
+                    for dep in setup_deps:
+                        subprocess.run([
+                            str(venv_pip), "install", dep
+                        ], check=True, capture_output=True)
+                
+                # 2. Install from requirements.txt (either from repo or copy from test-apps)
+                requirements_file = repo_path / "requirements.txt"
+                venv_requirements = venv_path / "requirements.txt"
+                
+                if project_config.get("requirements_file") and requirements_file.exists():
+                    logger.info(f"  Copying and installing from test-apps requirements.txt")
+                    # Copy requirements.txt to venv for persistence
+                    subprocess.run(["cp", str(requirements_file), str(venv_requirements)], check=True)
+                    subprocess.run([
+                        str(venv_pip), "install", "-r", str(venv_requirements)
+                    ], check=True, capture_output=True)
+                elif requirements_file.exists():
+                    logger.info(f"  Installing from existing requirements.txt")
+                    subprocess.run([
+                        str(venv_pip), "install", "-r", str(requirements_file)
+                    ], check=True, capture_output=True)
+                
+                # 3. Install optional extras (like tqdm[telegram])
+                extras = project_config.get("extras", [])
+                if extras:
+                    for extra in extras:
+                        logger.info(f"  Installing {project_name}[{extra}] optional extra")
+                        subprocess.run([
+                            str(venv_pip), "install", f"{project_name}[{extra}]"
+                        ], check=True, capture_output=True)
+                
+                # 4. Install additional packages
+                additional_deps = project_config.get("additional", [])
+                if additional_deps:
+                    logger.info(f"  Installing additional dependencies")
+                    for dep in additional_deps:
+                        subprocess.run([
+                            str(venv_pip), "install", dep
+                        ], check=True, capture_output=True)
+                
+                # 5. Install base packages (only if not already installed)
+                for pkg in BASE_PACKAGES:
+                    try:
+                        subprocess.run([
+                            str(venv_pip), "show", pkg.split(">=")[0].split("==")[0]  # Handle version specs
+                        ], check=True, capture_output=True)
+                    except subprocess.CalledProcessError:
+                        logger.info(f"  Installing missing base package: {pkg}")
+                        subprocess.run([
+                            str(venv_pip), "install", pkg
+                        ], check=True, capture_output=True)
+                
+                # 6. Install test packages
+                for pkg in TEST_PACKAGES:
+                    try:
+                        subprocess.run([
+                            str(venv_pip), "show", pkg.split(">=")[0].split("==")[0]
+                        ], check=True, capture_output=True)
+                    except subprocess.CalledProcessError:
+                        logger.info(f"  Installing missing test package: {pkg}")
+                        subprocess.run([
+                            str(venv_pip), "install", pkg
+                        ], check=True, capture_output=True)
             
-            # 3. Install optional extras (like tqdm[telegram])
-            extras = project_config.get("extras", [])
-            if extras:
-                for extra in extras:
-                    logger.info(f"  Installing {project_name}[{extra}] optional extra")
-                    subprocess.run([
-                        str(venv_pip), "install", f"{project_name}[{extra}]"
-                    ], check=True, capture_output=True)
-            
-            # 4. Install additional packages
-            additional_deps = project_config.get("additional", [])
-            if additional_deps:
-                logger.info(f"  Installing additional dependencies")
-                for dep in additional_deps:
-                    subprocess.run([
-                        str(venv_pip), "install", dep
-                    ], check=True, capture_output=True)
-            
-            # 5. Install base packages (only if not already installed)
-            for pkg in BASE_PACKAGES:
-                try:
-                    subprocess.run([
-                        str(venv_pip), "show", pkg.split(">=")[0].split("==")[0]  # Handle version specs
-                    ], check=True, capture_output=True)
-                except subprocess.CalledProcessError:
-                    logger.info(f"  Installing missing base package: {pkg}")
-                    subprocess.run([
-                        str(venv_pip), "install", pkg
-                    ], check=True, capture_output=True)
-            
-            # 6. Install test packages
-            for pkg in TEST_PACKAGES:
-                try:
-                    subprocess.run([
-                        str(venv_pip), "show", pkg.split(">=")[0].split("==")[0]
-                    ], check=True, capture_output=True)
-                except subprocess.CalledProcessError:
-                    logger.info(f"  Installing missing test package: {pkg}")
-                    subprocess.run([
-                        str(venv_pip), "install", pkg
-                    ], check=True, capture_output=True)
-            
-            # 7. Install project in development mode (if applicable)
+            # Install project in development mode (always needed regardless of method)
             setup_py = repo_path / "setup.py"
             pyproject_toml = repo_path / "pyproject.toml"
             
@@ -408,7 +426,7 @@ class SympromptEnvironmentManager:
                         str(venv_pip), "install", "-e", str(repo_path)
                     ], check=True, capture_output=True)
             
-            # 8. Create frozen requirements for persistence
+            # Create frozen requirements for persistence
             logger.info(f"  Creating frozen requirements file")
             with open(venv_path / "requirements_frozen.txt", "w") as f:
                 result = subprocess.run([
@@ -542,7 +560,22 @@ class SympromptEnvironmentManager:
         """Print setup summary with enhanced dependency information."""
         successful = [p for p, success in results.items() if success]
         failed = [p for p, success in results.items() if not success]
-        enhanced_projects = [p for p in successful if p in PROJECT_SPECIFIC_DEPS]
+        
+        # Check which projects used compatible requirements
+        compatible_projects = []
+        fallback_projects = []
+        enhanced_projects = []
+        
+        for project in successful:
+            compatible_reqs_file = COMPATIBLE_REQS_DIR / f"{project}_requirements.txt"
+            venv_path = VIRTUAL_ENVS_DIR / f"{project}_env"
+            
+            if compatible_reqs_file.exists() and (venv_path / "compatible_requirements.txt").exists():
+                compatible_projects.append(project)
+            elif project in PROJECT_SPECIFIC_DEPS:
+                enhanced_projects.append(project)
+            else:
+                fallback_projects.append(project)
         
         logger.info(f"\n{'='*60}")
         logger.info(f"Symprompt Environment Setup Summary")
@@ -550,18 +583,20 @@ class SympromptEnvironmentManager:
         logger.info(f"Total projects: {len(results)}")
         logger.info(f"Successful: {len(successful)}")
         logger.info(f"Failed: {len(failed)}")
-        logger.info(f"Enhanced with specific dependencies: {len(enhanced_projects)}")
+        logger.info(f"Used compatible requirements: {len(compatible_projects)}")
+        logger.info(f"Used enhanced fallback: {len(enhanced_projects)}")
+        logger.info(f"Used basic fallback: {len(fallback_projects)}")
         
-        if successful:
-            logger.info(f"\n✓ Successful projects:")
-            for project in successful:
+        if compatible_projects:
+            logger.info(f"\n✓ Projects using compatible requirements (optimal):")
+            for project in compatible_projects:
                 venv_path = VIRTUAL_ENVS_DIR / f"{project}_env"
-                enhanced_marker = " [ENHANCED]" if project in PROJECT_SPECIFIC_DEPS else ""
-                logger.info(f"  - {project}{enhanced_marker} → {venv_path}")
+                logger.info(f"  - {project} [COMPATIBLE] → {venv_path}")
         
         if enhanced_projects:
-            logger.info(f"\n🔧 Projects with enhanced dependency handling:")
+            logger.info(f"\n🔧 Projects using enhanced fallback dependencies:")
             for project in enhanced_projects:
+                venv_path = VIRTUAL_ENVS_DIR / f"{project}_env"
                 config = PROJECT_SPECIFIC_DEPS[project]
                 details = []
                 if config.get("extras"):
@@ -572,7 +607,14 @@ class SympromptEnvironmentManager:
                     details.append("requirements.txt copied")
                 if config.get("additional"):
                     details.append(f"additional: {len(config['additional'])} packages")
-                logger.info(f"  - {project}: {', '.join(details)}")
+                logger.info(f"  - {project} [ENHANCED] → {venv_path}")
+                logger.info(f"    {', '.join(details)}")
+        
+        if fallback_projects:
+            logger.info(f"\n⚠ Projects using basic fallback:")
+            for project in fallback_projects:
+                venv_path = VIRTUAL_ENVS_DIR / f"{project}_env"
+                logger.info(f"  - {project} [BASIC] → {venv_path}")
         
         if failed:
             logger.info(f"\n✗ Failed projects:")
@@ -581,12 +623,12 @@ class SympromptEnvironmentManager:
         
         logger.info(f"\nVirtual environments created in: {VIRTUAL_ENVS_DIR}")
         logger.info(f"Setup log saved to: symprompt_setup.log")
-        logger.info(f"\n📋 Enhanced features applied:")
-        logger.info(f"  - Project-specific dependency configurations")
-        logger.info(f"  - Optional extras installation (e.g., tqdm[telegram])")
-        logger.info(f"  - Requirements.txt copying and persistence")
-        logger.info(f"  - Critical module import verification")
-        logger.info(f"  - Frozen requirements generation")
+        logger.info(f"\n📋 Installation methods used:")
+        logger.info(f"  - [COMPATIBLE]: Pre-tested compatible requirements (fastest, most reliable)")
+        logger.info(f"  - [ENHANCED]: Project-specific dependency configurations with extras")
+        logger.info(f"  - [BASIC]: Standard requirements.txt installation")
+        logger.info(f"  - Compatible requirements directory: {COMPATIBLE_REQS_DIR}")
+        logger.info(f"  - Critical module import verification and frozen requirements generation")
 
 def main():
     """Main setup entry point."""

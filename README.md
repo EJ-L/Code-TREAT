@@ -81,12 +81,55 @@ We cover the overall model performance across Code Generation (CG), Code Summari
 
 ---
 
-To specify the model, task, and the parameter settings that you want, you need to specify and change the requirements in `configs/configs.yaml`, the example is already written in there!
+You control experiments through `configs/configs.yaml`. Each task stanza accepts the same set of knobs (models, datasets, sampling, manifests, etc.) while the new `reproduce` flag (default `true`) makes runners stick to the `_lite` datasets we used for our public results; flip it to `false` when you want to exercise the full corpora once you have them locally.
 
-After configruation, you simply only need to do:
+Here is a minimal example that runs three tasks and saves per-dataset manifests under `results/<task>/<dataset>_sample_manifest.json`:
+
+```yaml
+model_specification:
+  models: ["glm-4-flash"]
+  temperature: 0.8
+  top_k: 40
+  top_p: 0.95
+
+tasks:
+  - task: code_translation
+    enabled: true
+    parameters:
+      datasets: [{hackerrank: "java->python"}]
+      reproduce: true          # use the curated `_lite` split
+      sampling_mode: "random"  # or "manifest" to replay an existing file
+      sample_size: 3
+      sampling_seed: 42
+      sampling_manifest_path: ""  # leave empty to use the default results/<task>/<dataset> path
+      template_categories: ["direct"]
+      save_dir: "results"
+      parallel_requests: 2
+
+  - task: vulnerability_detection
+    enabled: true
+    parameters:
+      datasets: ["primevul", "primevul_pair"]
+      reproduce: true
+      sampling_mode: "random"
+      sample_size: 2
+      sampling_manifest_path: ""  # default path per dataset
+
+  - task: code_generation
+    enabled: true
+    parameters:
+      datasets: [{hackerrank: "java"}]
+      reproduce: false          # full dataset (requires HF access or local copy)
+      sampling_mode: "manifest"
+      sampling_manifest_path: "replication_manifest_json/code_generation_manifest.json"
+```
+
+With the config in place, simply run:
 ```python
 uv run scripts/run_experiment.py
 ```
+
+Every run writes a sampling manifest for each dataset under `results/<task>/` (unless you override `sampling_manifest_path`). Subsequent runs in `manifest` mode read the same file and now preserve the entries for previously sampled datasets instead of overwriting them, so you can accumulate several slices in a single manifest.
 
 When you finish testing you can evaluate by doing:
 ```python
@@ -120,9 +163,8 @@ ds = load_dataset("Code-TREAT/<dataset_name>")
 | **Code Reasoning (CR)** | [Code-TREAT/code_reasoning](https://huggingface.co/datasets/Code-TREAT/code_reasoning) | [Code-TREAT/code_reasoning_lite](https://huggingface.co/datasets/Code-TREAT/code_reasoning_lite) | Extended from HackerRank and GeeksforGeeks datasets by masking inputs/outputs, designed to test LLM reasoning via prediction accuracy. |
 | **Code Review Generation (CRv)** | [Code-TREAT/code_review](https://huggingface.co/datasets/Code-TREAT/code_review) | [Code-TREAT/code_review_lite](https://huggingface.co/datasets/Code-TREAT/code_review_lite) | From self-collected GitHub projects created since 2023 and crawled in 2025. Contains diff–review pairs. |
 | **Test Generation (TG)** | [Code-TREAT/unit_test_generation](https://huggingface.co/datasets/Code-TREAT/unit_test_generation) | Supplement: `_supp` version adds **branch coverage info** | From [Code-Aware Prompting](https://arxiv.org/abs/2402.00097). The original dataset is available on [Figshare](https://figshare.com/articles/dataset/SymPrompt_Focal_Method_Benchmark_for_Unit_Test_Generation/25277314?file=44661979). |
-| **Vulnerability Detection (VD)** | [colin/PrimeVul](https://huggingface.co/datasets/colin/PrimeVul) | reproduce through TREAT's `replication_manifest_json/replicate_vd.json` | From [PrimeVul](https://github.com/DLVulDet/PrimeVul). We use a mirrored version on HF for convenience. Includes both single-function and paired-function variants. |
+| **Vulnerability Detection (VD)** | [Code-TREAT/PrimeVul_original](https://huggingface.co/datasets/Code-TREAT/PrimeVul_original), [Code-TREAT/PrimeVul-Paired_original](https://huggingface.co/datasets/Code-TREAT/PrimeVul-Paired_original) | [Code-TREAT/PrimeVul_original_lite](https://huggingface.co/datasets/Code-TREAT/PrimeVul_original_lite), [Code-TREAT/PrimeVul-Paired_original_lite](https://huggingface.co/datasets/Code-TREAT/PrimeVul-Paired_original_lite) | Mirrors of the PrimeVul single-function and paired variants we curated for reproducible evaluation. Set `reproduce: true` to target the `_lite` splits shipped with the repo. |
 
 ## Citation
 
 If you use TREAT in your research, please cite:
-

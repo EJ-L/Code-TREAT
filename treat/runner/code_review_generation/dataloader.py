@@ -10,13 +10,15 @@ from datasets import load_dataset
 
 
 class DataLoader:
-    def __init__(self, dataset: str, language: str):
+    def __init__(self, dataset: str, language: str, reproduce: bool = True):
         self.dataset = dataset
         self.language = language
+        self.reproduce = reproduce
         
     def load_data(self):
         data = []
-        ds = load_dataset("Code-TREAT/code_review_generation")
+        dataset_name = "Code-TREAT/code_review_generation_lite" if self.reproduce else "Code-TREAT/code_review_generation"
+        ds = load_dataset(dataset_name)
         test_data = ds['test']
         for record in test_data:
             lang = record["lang"]

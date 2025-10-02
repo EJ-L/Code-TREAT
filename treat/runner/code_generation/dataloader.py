@@ -11,19 +11,18 @@ from datasets import load_dataset
 class DataLoader:
     """Data loader for code generation with batching and filtering capabilities"""
     
-    def __init__(self, dataset: str, language: str):
+    def __init__(self, dataset: str, language: str, reproduce: bool = True):
         """Initialize the data loader with dataset path"""
         self.dataset = dataset
         self.language = language
+        self.reproduce = reproduce
 
     def load_data(self):
         """Load all code generation data from the dataset"""
-        if self.dataset == 'geeksforgeeks':
-            ds = load_dataset("Code-TREAT/code_generation")
-        elif self.dataset == 'hackerrank':
-            ds = load_dataset("Code-TREAT/code_generation")
-        else:
+        dataset_name = "Code-TREAT/code_generation_lite" if self.reproduce else "Code-TREAT/code_generation"
+        if self.dataset not in {"geeksforgeeks", "hackerrank"}:
             raise ValueError(f"Unknown dataset {self.dataset}")
+        ds = load_dataset(dataset_name)
         full_data = ds['test']
         organized_data = []
         for data in full_data:

@@ -14,7 +14,8 @@ class PolyHumanEvalData(Data):
     def __init__(self, id, source_code):
         super().__init__(id, dataset="polyhumaneval", domain="polyhumaneval")        
         self.source_code = source_code
-            
+        self.difficulty = "Easy"
+        
 class HackerrankData(Data):
     def __init__(self, id, title, difficulty, domain, release_date, source_code):
         super().__init__(id, dataset="hackerrank", domain=domain)

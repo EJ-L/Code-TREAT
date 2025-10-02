@@ -1,0 +1,31 @@
+{
+  "task": "code_summarization",
+  "timestamp": "2025-10-02T18:32:46.636427Z",
+  "total_candidates": 200,
+  "sample_size": 3,
+  "sampling_mode": "random",
+  "sampling_seed": 42,
+  "items": [
+    {
+      "dataset": "github_2023",
+      "id": "github_2023::AllayMC/Allay::f7fcf6d9183c5216e7321510a6cd2a5017d20ca9::ParameterFormatter.countArgumentPlaceholders3::https://github.com/AllayMC/Allay/blob/f7fcf6d9183c5216e7321510a6cd2a5017d20ca9/api/src/main/java/org/allaymc/api/utils/ParameterFormatter.java#L120-L139"
+    },
+    {
+      "dataset": "github_2023",
+      "id": "github_2023::zhugezifang/dataService::a25f1c85f05d39b693e44f0981b791c09481a784::IpUtils.getIpAddr::https://github.com/zhugezifang/dataService/blob/a25f1c85f05d39b693e44f0981b791c09481a784/common/src/main/java/com/vince/xq/common/utils/IpUtils.java#L20-L50"
+    },
+    {
+      "dataset": "github_2023",
+      "id": "github_2023::vitorpamplona/amethyst::f0116ad06eac2210fe9dd4ced035f78c969ad504::Hash.getAlgorithm::https://github.com/vitorpamplona/amethyst/blob/f0116ad06eac2210fe9dd4ced035f78c969ad504/quartz/src/main/java/com/vitorpamplona/quartz/nip03Timestamp/ots/Hash.java#L65-L67"
+    }
+  ],
+  "dataset_stats": {
+    "github_2023": {
+      "total_candidates": 200,
+      "sample_size": 3,
+      "sampling_mode": "random",
+      "sampling_seed": 42,
+      "timestamp": "2025-10-02T18:32:46.636427Z"
+    }
+  }
+}

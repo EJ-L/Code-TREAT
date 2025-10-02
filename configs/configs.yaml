@@ -37,7 +37,7 @@ model_specification:
 
 tasks:
   - task: unit_test_generation
-    enabled: false
+    enabled: true
     parameters:
       datasets: [{'symprompt': 'python'}]
       template_categories: ['direct']
@@ -45,21 +45,26 @@ tasks:
       n_requests: 1
       parallel_requests: 10
       save_dir: "results"
-      sampling_mode: "random"
-      sample_size: 3
+      reproduce: true
+      sampling_mode: "manifest"
+      sample_size: 5
 
       sampling_seed: 42
-      sampling_manifest_path: null
+      sampling_manifest_path: "replication_manifest_json/unit_test_generation_sample_manifest.json"
 
   - task: code_translation
-    enabled: false
+    enabled: true
     parameters:
-      datasets: [{'hackerrank': 'python->java'}, {'polyhumaneval': 'java->python'}]
+      datasets: [
+        {'hackerrank': 'java->python'}, 
+        {'polyhumaneval': 'java->python'}
+      ]
       template_categories: ['direct']
       test_samples: null
       n_requests: 1
-      parallel_requests: 2
+      parallel_requests: 5
       save_dir: "results"
+      reproduce: true
       sampling_mode: "manifest"
       sample_size: 3
       sampling_seed: 42
@@ -68,33 +73,35 @@ tasks:
   - task: code_generation
     enabled: true
     parameters:
-      datasets: [{'hackerrank': 'java'}, {'geeksforgeeks': 'python'}]
+      datasets: [{'hackerrank': 'java'}]
       template_categories: ['direct']
       test_samples: null
       n_requests: 1
       parallel_requests: 10
       save_dir: "results"
-      sampling_mode: "random"
+      reproduce: true
+      sampling_mode: "manifest"
       sample_size: 2
       sampling_seed: 42
       sampling_manifest_path: ""
     
   - task: vulnerability_detection
-    enabled: false
+    enabled: true
     parameters:
-      datasets: ['primevul', 'primevul_pair']
+      datasets: ['primevul']
       template_categories: ['direct']
       test_samples: null
       n_requests: 1
       parallel_requests: 10
       save_dir: "results"
+      reproduce: true
       sampling_mode: "manifest"
       sample_size: 3
       sampling_seed: 42
-      sampling_manifest_path: "/results/vulnerability_detection_sample_manifest.json"
+      sampling_manifest_path: "replication_manifest_json/vulnerability_detection_sample_manifest.json"
 
   - task: code_summarization
-    enabled: false
+    enabled: true
     parameters:
       datasets: [{'github_2023': 'python'}, {'github_2023': 'java'}]
       template_categories: ['direct']
@@ -102,13 +109,14 @@ tasks:
       n_requests: 1
       parallel_requests: 10
       save_dir: "results"
-      sampling_mode: "random"
+      reproduce: true
+      sampling_mode: "manifest"
       sample_size: 3
       sampling_seed: 42
-      sampling_manifest_path: ""
+      sampling_manifest_path: "replication_manifest_json/code_summarization_sample_manifest.json"
 
   - task: code_review_generation
-    enabled: false
+    enabled: true
     parameters:
       datasets: [{'github_2023': 'python'}, {'github_2023': 'go'}]
       template_categories: ['direct']
@@ -116,35 +124,44 @@ tasks:
       n_requests: 1
       parallel_requests: 3
       save_dir: "results"
+      reproduce: true
       sampling_mode: "manifest"
       sample_size: 2
       sampling_seed: 42
       sampling_manifest_path: "replication_manifest_json/code_review_generation_manifest.json"
 
   - task: input_prediction
-    enabled: false
+    enabled: true
     parameters:
-      datasets: [{'hackerrank': 'java'}, {'geeksforgeeks': 'python'}]
+      datasets: [
+        {'hackerrank': 'java'}, 
+        {'geeksforgeeks': 'python'}
+      ]
       template_categories: ['direct']
       test_samples: null
       n_requests: 1
       parallel_requests: 10
       save_dir: "results"
-      sampling_mode: "random"
+      reproduce: true
+      sampling_mode: "manifest"
       sample_size: 3
       sampling_seed: 42
-      sampling_manifest_path: ""
+      sampling_manifest_path: "replication_manifest_json/code_reasoning_input_manifest.json"
 
   - task: output_prediction
-    enabled: false
+    enabled: true
     parameters:
-      datasets: [{'hackerrank': 'python'}, {'geeksforgeeks': 'java'}]
+      datasets: [
+        {'hackerrank': 'python'},
+        {'geeksforgeeks': 'java'}
+      ]
       template_categories: ['direct']
       test_samples: null
       n_requests: 1
       parallel_requests: 10
       save_dir: "results"
-      sampling_mode: "random"
+      reproduce: true
+      sampling_mode: "manifest"
       sample_size: 3
       sampling_seed: 42
-      sampling_manifest_path: ""
+      sampling_manifest_path: "replication_manifest_json/code_reasoning_output_manifest.json"

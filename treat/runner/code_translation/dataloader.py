@@ -12,31 +12,34 @@ POLY_DATA_DIR = os.path.join(PROJECT_ROOT, "..", "data", "polyhumaneval", "polyh
 class DataLoader:
     """Data loader for code translation with batching and filtering capabilities"""
     
-    def __init__(self, dataset: str, language: str):
+    def __init__(self, dataset: str, language: str, reproduce: bool = True):
         """Initialize the data loader with dataset path"""
         # assert the language is outputted in the format of SL->TL
         self.dataset = dataset
         self.source_lang, self.target_lang = language.split('->')
+        self.reproduce = reproduce
 
     def load_data(self):
         organized_data = []
-        ds = load_dataset('Code-TREAT/code_translation')
-        full_data = ds['test']
-        for data in full_data:
-            if data['dataset'] != self.dataset:
-                continue
-            if data['dataset'] == 'hackerrank':
-                organized_data.append(HackerrankData(
-                    id=data['question_id'],
-                    title=data['question_title'],
-                    difficulty=data['difficulty'],
-                    domain=data.get("domain", "hr"),
-                    release_date="",
-                    source_code=data[self.source_lang]['solution'],
-                ))
-            elif data['dataset'] == 'polyhumaneval':
-                organized_data.append(PolyHumanEvalData(
-                    id=data['question_id'],
-                    source_code=data[self.source_lang]['solution'],
-                ))
+        if self.dataset == 'hackerrank':
+            dataset_name = 'Code-TREAT/code_translation_lite' if self.reproduce else 'Code-TREAT/code_translation'
+            ds = load_dataset(dataset_name)
+            full_data = ds['test']
+            for data in full_data:
+                if data['dataset'] == 'hackerrank':
+                    organized_data.append(HackerrankData(
+                        id=data['question_id'],
+                        title=data['question_title'],
+                        difficulty=data['difficulty'],
+                        domain=data.get("domain", "hr"),
+                        release_date="",
+                        source_code=data[self.source_lang]['solution'],
+                    ))
+        elif self.dataset == 'polyhumaneval':
+            with open(POLY_DATA_DIR, 'r') as f:
+                data = json.load(f)
+                organized_data = [PolyHumanEvalData(
+                    id=_id,
+                    source_code=sol,
+                ) for _id, sol in data[self.source_lang].items()]
         return organized_data

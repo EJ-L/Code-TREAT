@@ -1,0 +1,39 @@
+{
+  "task": "unit_test_generation",
+  "timestamp": "2025-10-02T18:32:27.958251Z",
+  "total_candidates": 897,
+  "sample_size": 5,
+  "sampling_mode": "random",
+  "sampling_seed": 42,
+  "items": [
+    {
+      "dataset": "symprompt",
+      "id": "tornado_tornado.locks_Semaphore___aexit__"
+    },
+    {
+      "dataset": "symprompt",
+      "id": "httpie_httpie.config_BaseConfigDict_ensure_directory"
+    },
+    {
+      "dataset": "symprompt",
+      "id": "cookiecutter_cookiecutter.replay__get_file_name"
+    },
+    {
+      "dataset": "symprompt",
+      "id": "typesystem_typesystem.base_BaseError___repr__"
+    },
+    {
+      "dataset": "symprompt",
+      "id": "pymonet_pymonet.validation_Validation___str__"
+    }
+  ],
+  "dataset_stats": {
+    "symprompt": {
+      "total_candidates": 897,
+      "sample_size": 5,
+      "sampling_mode": "random",
+      "sampling_seed": 42,
+      "timestamp": "2025-10-02T18:32:27.958251Z"
+    }
+  }
+}

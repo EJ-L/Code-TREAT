@@ -11,13 +11,15 @@ from datasets import load_dataset
 class DataLoader:
     """Data loader for code reasoning with batching and filtering capabilities"""
     
-    def __init__(self, dataset: str, language: str):
+    def __init__(self, dataset: str, language: str, reproduce: bool = True):
         """Initialize the data loader with dataset path"""
         self.dataset = dataset
         self.language = language
+        self.reproduce = reproduce
     
     def load_data(self):
-        ds = load_dataset("Code-TREAT/code_reasoning")
+        dataset_name = "Code-TREAT/code_reasoning_lite" if self.reproduce else "Code-TREAT/code_reasoning"
+        ds = load_dataset(dataset_name)
         full_data = ds['test']
         organized_data = []
         for data in full_data:

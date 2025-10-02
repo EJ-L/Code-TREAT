@@ -1,0 +1,50 @@
+{
+  "task": "output_prediction",
+  "timestamp": "2025-10-02T18:35:12.864276Z",
+  "total_candidates": 210,
+  "sample_size": 6,
+  "sampling_mode": "random",
+  "sampling_seed": 42,
+  "items": [
+    {
+      "dataset": "hackerrank",
+      "id": 6345
+    },
+    {
+      "dataset": "hackerrank",
+      "id": 6568
+    },
+    {
+      "dataset": "hackerrank",
+      "id": 127
+    },
+    {
+      "dataset": "geeksforgeeks",
+      "id": 713975
+    },
+    {
+      "dataset": "geeksforgeeks",
+      "id": 703489
+    },
+    {
+      "dataset": "geeksforgeeks",
+      "id": 704464
+    }
+  ],
+  "dataset_stats": {
+    "hackerrank": {
+      "total_candidates": 52,
+      "sample_size": 3,
+      "sampling_mode": "random",
+      "sampling_seed": 42,
+      "timestamp": "2025-10-02T18:35:02.476406Z"
+    },
+    "geeksforgeeks": {
+      "total_candidates": 158,
+      "sample_size": 3,
+      "sampling_mode": "random",
+      "sampling_seed": 42,
+      "timestamp": "2025-10-02T18:35:12.864276Z"
+    }
+  }
+}
