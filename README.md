@@ -131,6 +131,32 @@ uv run scripts/run_experiment.py
 
 Every run writes a sampling manifest for each dataset under `results/<task>/` (unless you override `sampling_manifest_path`). Subsequent runs in `manifest` mode read the same file and now preserve the entries for previously sampled datasets instead of overwriting them, so you can accumulate several slices in a single manifest.
 
+When you want to score completed generations, point the evaluation driver at the same config (so it knows which datasets/models to look for) and override judge settings on the CLI as needed:
+
+```bash
+uv run scripts/run_evaluation.py \
+  --tasks code_summarization code_translation \
+  --judge-model gpt-4o-2024-11-20 \
+  --max-workers 4
+```
+
+`run_evaluation.py` walks each enabled task, pulls predictions from `results/<task>/<dataset>/predictions`, populates `/parsed/` if required, and drops evaluation files in `/evaluations/`. The CLI flags simply override what’s in `configs/configs.yaml` (e.g., pick a different judge model or limit tasks to re-evaluate).
+
+The mapping between config and filesystem is one-to-one:
+
+| `task` | Example `datasets` entry | Predictions expected in… | Evaluations written to… |
+|--------|--------------------------|---------------------------|--------------------------|
+| `code_summarization` | `{'github_2023': 'python'}` | `results/code_summarization/github_2023/predictions/` | `results/code_summarization/github_2023/evaluations/` |
+| `code_translation` | `{'hackerrank': 'java->python'}` | `results/code_translation/hackerrank/predictions/` | `results/code_translation/hackerrank/evaluations/` |
+| `code_generation` | `{'hackerrank': 'java'}` | `results/code_generation/hackerrank/predictions/` | `results/code_generation/hackerrank/evaluations/` |
+| `code_review_generation` | `{'github_2023': 'python'}` | `results/code_review_generation/github_2023/predictions/` | `results/code_review_generation/github_2023/evaluations/` |
+| `unit_test_generation` | `{'symprompt': 'python'}` | `results/unit_test_generation/symprompt/predictions/` | `results/unit_test_generation/symprompt/evaluations/` |
+| `vulnerability_detection` | `'primevul'` or `'primevul_pair'` | `results/vulnerability_detection/<dataset>/predictions/` | `results/vulnerability_detection/<dataset>/evaluations/` |
+
+As long as the tasks/datasets listed in `configs/configs.yaml` match the directories populated during generation, the evaluator will locate them automatically. For example, predictions stored in `results/code_summarization/github_2023/predictions/GLM-4-Flash.jsonl` produce an evaluation file at `results/code_summarization/github_2023/evaluations/GLM-4-Flash.jsonl` (with judge decisions cached alongside).
+
+If you do want a separate evaluation configuration (e.g., to change judges without touching your experiment settings), copy `configs/configs.yaml`, edit the `model_specification`/`tasks` blocks as needed, and pass it via `--config path/to/evaluation.yaml`.
+
 When you finish testing you can evaluate by doing:
 ```python
 uv run scripts/run_evaluation.py

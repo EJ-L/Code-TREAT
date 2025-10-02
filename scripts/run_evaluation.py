@@ -65,7 +65,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         default="configs/configs.yaml",
-        help="Path to the experiment configuration used for generation.",
+        help="Path to the experiment configuration used for generation (defaults to configs/configs.yaml).",
     )
     parser.add_argument(
         "--tasks",
