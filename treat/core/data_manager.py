@@ -13,7 +13,7 @@ class DatasetManager:
             from treat.runner.code_generation.dataloader import DataLoader as CodeGenerationDataLoader
             return CodeGenerationDataLoader(self.dataset, self.language, reproduce=self.reproduce).load_data()
         if self.task_name == "code_translation":
-            from treat.runner.code_translation.dataloader import DataLoader as CodeTranslationDataLoader
+            from treat.runner.code_translation.dataloader import CodeTranslationDataLoader
             return CodeTranslationDataLoader(self.dataset, self.language, reproduce=self.reproduce).load_data()
         if self.task_name == "vulnerability_detection":
             from treat.runner.vulnerability_detection.dataloader import DataLoader as VulnerabilityDetectionDataLoader

@@ -347,8 +347,9 @@ class BaseTaskRunner(ABC):
         if not os.path.exists(path):
             print(f"[{self.get_task_name()}] Manifest not found at: {path}")
             return None
-        with open(path, "r", encoding="utf-8") as f:
-            manifest = json.load(f)
+        # Use safe file loading utility
+        from treat.core.file_utils import safe_load_json
+        manifest = safe_load_json(path)
         if manifest.get("task") != self.get_task_name():
             print(f"[{self.get_task_name()}] Manifest task mismatch; ignoring file: {path}")
             return None

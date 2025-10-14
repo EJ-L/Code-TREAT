@@ -105,6 +105,13 @@ MODELS = {
 
     # ZhiPu (GLM)
     "glm-4-flash": mk("zhipu", ZHIPU_KEY, "", "glm-4-flash", ZHIPU_CLIENT),
+    "glm-4": mk("zhipu", ZHIPU_KEY, "", "glm-4", ZHIPU_CLIENT),
+    "glm-4-plus": mk("zhipu", ZHIPU_KEY, "", "glm-4-plus", ZHIPU_CLIENT),
+    "glm-4-air": mk("zhipu", ZHIPU_KEY, "", "glm-4-air", ZHIPU_CLIENT),
+    "glm-4-airx": mk("zhipu", ZHIPU_KEY, "", "glm-4-airx", ZHIPU_CLIENT),
+    "glm-4.5": mk("zhipu", ZHIPU_KEY, "", "glm-4.5", ZHIPU_CLIENT),
+    "glm-4.5-air": mk("zhipu", ZHIPU_KEY, "", "glm-4.5-air", ZHIPU_CLIENT),
+    "glm-4.6": mk("zhipu", ZHIPU_KEY, "", "glm-4.6", ZHIPU_CLIENT),
 
     # Ollama (local)
     "qwen3-32b-local": mk("ollama", "ollama", "http://localhost:11434/v1", "qwen3:32b", OLLAMA_CLIENT),

@@ -75,8 +75,9 @@ class TemplateManager:
             else:
                 full_path = self.json_path
                 
-            with open(full_path, 'r') as file:
-                return json.load(file)
+            # Use our safe file loading utility
+            from treat.core.file_utils import safe_load_json
+            return safe_load_json(full_path)
         except FileNotFoundError:
             print(f"Warning: Template file {self.json_path} not found")
             return {}

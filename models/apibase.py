@@ -1,5 +1,5 @@
 from tenacity import retry, stop_after_attempt, wait_random_exponential
-from zhipuai import ZhipuAI
+from zai import ZhipuAiClient
 import openai
 from openai import OpenAI
 import anthropic
@@ -170,7 +170,7 @@ class APIBase:
                     default_headers={"Accept-Encoding": "identity"},
                 )
             elif client_library == "ZHIPU_CLIENT":
-                self.client = ZhipuAI(api_key=self.api_key)
+                self.client = ZhipuAiClient(api_key=self.api_key)
             elif client_library == "ANTHROPIC_CLIENT":
                 self.client = anthropic.Anthropic(api_key=self.api_key)
             elif client_library == "GOOGLE_CLIENT":
@@ -205,15 +205,28 @@ class APIBase:
                         **kwargs,
                     )
                 elif self.model_name.lower().startswith("glm"):
-                    response = self.client.chat.completions.create(
-                        model=self.api_model_name,
-                        messages=messages,
-                        top_p=top_p,
-                        temperature=temperature,
-                        max_tokens=resolved_max_tokens,
-                        stream=False,
-                        **kwargs,
-                    )
+                    # Add thinking parameter for GLM-4.5 and GLM-4.6 models
+                    if self.model_name.lower().startswith(("glm-4.5", "glm-4.6")):
+                        response = self.client.chat.completions.create(
+                            model=self.api_model_name,
+                            messages=messages,
+                            top_p=top_p,
+                            temperature=temperature,
+                            max_tokens=resolved_max_tokens,
+                            stream=False,
+                            thinking={"type": "enabled"},
+                            **kwargs,
+                        )
+                    else:
+                        response = self.client.chat.completions.create(
+                            model=self.api_model_name,
+                            messages=messages,
+                            top_p=top_p,
+                            temperature=temperature,
+                            max_tokens=resolved_max_tokens,
+                            stream=False,
+                            **kwargs,
+                        )
                 elif self.model_name.lower().startswith(("grok-3-mini", "grok-3-mini-beta")):
                     response = self.client.chat.completions.create(
                         model=self.api_model_name,
