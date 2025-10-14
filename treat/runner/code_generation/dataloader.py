@@ -19,7 +19,11 @@ class DataLoader:
 
     def load_data(self):
         """Load all code generation data from the dataset"""
-        dataset_name = "Code-TREAT/code_generation_lite" if self.reproduce else "Code-TREAT/code_generation"
+        if self.dataset == 'geeksforgeeks':
+            dataset_name = "Code-TREAT/code_generation_lite" if self.reproduce else "Code-TREAT/code_generation"
+        if self.dataset == 'hackerrank':
+            dataset_name = "Code-TREAT/code_translation_lite" if self.reproduce else "Code-TREAT/code_translation" # shared with the code translation task
+
         if self.dataset not in {"geeksforgeeks", "hackerrank"}:
             raise ValueError(f"Unknown dataset {self.dataset}")
         ds = load_dataset(dataset_name)
