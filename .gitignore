@@ -74,6 +74,10 @@ configs/**/override*.yml
 *secrets*.yml
 *secrets*.json
 
+# --- Local files ---
+configs/configs copy.yaml
+setup_datasets.py
+
 # --- Editors & OS cruft ---
 .DS_Store
 Thumbs.db
