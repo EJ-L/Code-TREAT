@@ -1,6 +1,7 @@
-# TREAT: Code LLMs Trustworthiness / Reliability Evaluation And Testing
+# TREAT: Code LLMs Trustworthiness / Reliability Evaluation And Testing 
 
 ## Overview
+Project website & live leaderboard: [here](https://code-treat.vercel.app)
 
 Large foundation models are fundamentally transforming the software engineering landscape, demonstrating exceptional potential across diverse tasks including code generation, debugging, and testing.  
 However, despite this rapid progress, a significant gap remains in comprehensive and rigorous evaluation methodologies for assessing the **trustworthiness** and **reliability** of these models across real-world software engineering scenarios.
@@ -39,6 +40,11 @@ Based on this framework, we evaluated over **26 state-of-the-art models** and un
 - 📌 Our **multi-prompt evaluation method** mitigates prompt bias and yields more reliable results.  
 
 ---
+## Prompt Templates
+
+All prompt templates used in our experiments are available at:
+
+➡️ [`templates/prompts.json`](./templates/prompts.json)
 
 ## Leaderboard Results
 We cover the overall model performance across Code Generation (CG), Code Summarization (CS), Code Translation (CT), Code Reasoning (CR), Code Review Generation (CRv), Test Generation (TG), and Vulnerability Detection (VD).
@@ -73,6 +79,72 @@ We cover the overall model performance across Code Generation (CG), Code Summari
 | 24   | LLaMA-4-Scout       | 51.2   | 74.4   | 64.4   | 48.4   | 30.1  | 68.7   | 49.0  |
 | 25   | GPT-3.5-turbo       | 50.6   | 71.2   | 66.5   | 34.8   | 30.4  | 67.5   | 45.8  |
 | 26   | LLaMA-3.1-8B        | 31.8   | 64.2   | 49.6   | 28.8   | 30.2  | 46.0   | 54.5  |
+
+## Leaderboard: Code Summarization (CS) by Language (Score)
+
+| Rank | Model | Overall | Python | Java | C | C++ | C# | Ruby | JavaScript | TypeScript | PHP | Go |
+|------|------------------------------|---------|--------|--------|------|-------|------|-------|------------|------------|------|------|
+| 1 | Claude-3.5-Sonnet-20241022 | 66.1 | 67.6 | 68.6 | 68.2 | 62.9 | 65.3 | 65.9 | 63.7 | 67.1 | 67.4 | 64.6 |
+| 2 | Llama-3.3-70B-Instruct | 65.9 | 68.9 | 69.3 | 67.0 | 63.4 | 64.9 | 64.6 | 62.5 | 66.4 | 67.8 | 64.4 |
+| 3 | Claude-Sonnet-4 | 65.8 | 67.7 | 69.6 | 67.7 | 63.5 | 64.8 | 65.1 | 62.8 | 66.3 | 66.9 | 64.1 |
+| 4 | GPT-5 | 65.7 | 69.4 | 68.4 | 68.4 | 63.1 | 66.1 | 62.9 | 63.0 | 67.0 | 67.9 | 66.7 |
+| 5 | Qwen3-235B-A22B | 65.1 | 68.1 | 65.1 | 66.8 | 62.2 | 65.3 | 62.8 | 62.3 | 64.7 | 70.7 | 67.1 |
+| 6 | DeepSeek-V3 | 64.3 | 67.2 | 66.3 | 67.0 | 61.9 | 63.9 | 63.5 | 61.2 | 64.1 | 65.0 | 63.0 |
+| 7 | DeepSeek-R1 (0528) | 63.8 | 67.3 | 66.3 | 66.4 | 61.3 | 63.1 | 62.0 | 61.0 | 63.9 | 64.3 | 62.1 |
+| 8 | DeepSeek-R1 | 63.8 | 67.2 | 66.4 | 66.4 | 61.4 | 63.2 | 62.0 | 61.0 | 63.9 | 64.2 | 62.1 |
+| 9 | Claude-3.7-Sonnet | 63.7 | 66.7 | 65.8 | 65.1 | 60.9 | 62.3 | 64.3 | 60.5 | 63.8 | 65.2 | 62.4 |
+| 10 | GPT-4-turbo-2024-04-09 | 63.2 | 66.3 | 64.2 | 66.2 | 61.3 | 63.6 | 63.2 | 60.9 | 63.1 | 63.6 | 63.7 |
+| 11 | Qwen3-32B | 63.1 | 68.0 | 63.4 | 67.1 | 61.1 | 63.9 | 62.0 | 60.9 | 63.4 | 64.7 | 61.7 |
+| 12 | GPT-4o-2024-11-20 | 62.8 | 67.2 | 63.1 | 65.5 | 60.8 | 63.2 | 63.4 | 59.7 | 62.9 | 64.4 | 62.6 |
+| 13 | Qwen2.5-72B-Instruct | 62.6 | 66.0 | 64.5 | 64.8 | 59.8 | 62.3 | 62.0 | 59.4 | 62.5 | 63.3 | 61.6 |
+| 14 | Qwen2.5-Coder-32B-Instruct | 62.6 | 65.8 | 66.1 | 64.8 | 59.6 | 61.2 | 60.9 | 61.0 | 62.3 | 63.8 | 62.3 |
+| 15 | Grok-3-Mini (High) | 62.5 | 64.6 | 65.9 | 65.4 | 60.3 | 60.8 | 60.9 | 59.8 | 62.8 | 63.7 | 61.2 |
+| 16 | Claude-3.5-Haiku-20241022 | 61.6 | 64.4 | 64.7 | 64.8 | 59.2 | 60.0 | 55.8 | 59.7 | 62.2 | 63.1 | 62.2 |
+| 17 | Gemma-3-27B-Instruct | 61.3 | 64.8 | 64.1 | 62.2 | 57.5 | 60.6 | 61.3 | 58.2 | 61.9 | 62.9 | 60.0 |
+| 18 | o4-mini (Med) | 61.1 | 66.1 | 62.8 | 63.3 | 59.3 | 60.6 | 57.9 | 59.0 | 62.6 | 62.3 | 62.8 |
+| 19 | o3-mini (Med) | 60.4 | 24.5 | 60.3 | 64.3 | 59.3 | 62.0 | 60.8 | 59.0 | 61.5 | 63.6 | 62.1 |
+| 20 | Gemini-2.5-Pro-Preview-05-06 | 60.3 | 63.3 | 62.5 | 62.6 | 57.4 | 59.4 | 58.6 | 58.0 | 61.1 | 62.3 | 60.2 |
+| 21 | GPT-4.1-2025-04-14 | 60.0 | 62.4 | 62.0 | 62.7 | 57.9 | 58.9 | 58.8 | 57.6 | 60.7 | 62.2 | 61.1 |
+| 22 | Qwen3-30B-A3B | 59.7 | 63.5 | 59.6 | 62.4 | 57.1 | 60.6 | 59.6 | 57.2 | 60.5 | 61.2 | 59.3 |
+| 23 | Llama-3.1-70B-Instruct | 58.6 | 58.4 | 62.2 | 60.2 | 56.5 | 59.0 | 55.2 | 56.4 | 59.3 | 61.9 | 56.8 |
+| 24 | Llama-4-Scout-17B-16E-Instruct | 58.4 | 59.3 | 63.3 | 58.9 | 54.6 | 57.3 | 57.0 | 55.7 | 58.6 | 60.8 | 58.2 |
+| 25 | GPT-3.5-turbo-0125 | 56.3 | 58.8 | 59.2 | 58.1 | 53.1 | 55.6 | 56.0 | 52.7 | 55.9 | 58.4 | 55.1 |
+| 26 | Llama-3.1-8B-Instruct | 54.3 | 56.2 | 57.3 | 53.9 | 51.6 | 53.4 | 54.5 | 51.3 | 54.7 | 56.1 | 54.1 |
+
+---
+
+## Leaderboard: Code Review Generation (CRv) by Language (Score)
+
+| Rank | Model | Overall | Python | Java | C | C++ | C# | Ruby | JavaScript | TypeScript | PHP | Go |
+|------|------------------------------|---------|--------|--------|------|------|------|------|------------|------------|------|------|
+| 1 | Grok-3-Mini (High) | 35.3 | 35.5 | 34.7 | 33.0 | 35.3 | 35.3 | 33.9 | 37.2 | 37.0 | 34.0 | 37.2 |
+| 2 | Claude-Sonnet-4 | 35.0 | 34.8 | 33.9 | 33.0 | 34.6 | 34.8 | 34.5 | 38.1 | 35.4 | 34.2 | 36.7 |
+| 3 | DeepSeek-R1 (0528) | 34.9 | 34.8 | 34.4 | 32.5 | 35.1 | 35.7 | 33.8 | 36.7 | 36.5 | 33.5 | 36.6 |
+| 4 | Claude-3.7-Sonnet | 34.8 | 34.9 | 34.5 | 32.9 | 34.8 | 35.7 | 33.0 | 36.4 | 36.1 | 34.0 | 36.1 |
+| 5 | Gemini-2.5-Pro-05-06 | 34.8 | 35.2 | 34.9 | 31.8 | 35.5 | 33.9 | 35.0 | 37.4 | 36.1 | 33.0 | 35.3 |
+| 6 | Gemma-3-27B-Instruct | 34.7 | 34.8 | 33.8 | 32.3 | 34.4 | 35.1 | 34.8 | 37.1 | 35.3 | 33.9 | 35.5 |
+| 7 | Claude-3.5-Sonnet-20241022 | 34.6 | 33.9 | 32.8 | 31.7 | 34.2 | 34.3 | 33.5 | 36.9 | 35.1 | 33.6 | 36.4 |
+| 8 | Qwen3-30B-A3B | 34.6 | 35.3 | 33.3 | 32.8 | 35.4 | 34.2 | 33.7 | 35.7 | 34.8 | 33.6 | 37.5 |
+| 9 | Qwen3-235B-A22B | 34.5 | 34.9 | 33.0 | 32.1 | 34.6 | 34.5 | 33.7 | 37.7 | 35.4 | 33.4 | 36.7 |
+| 10 | o3-mini (Med) | 34.5 | 33.1 | 32.8 | 30.9 | 34.8 | 34.4 | 34.2 | 36.8 | 34.7 | 33.6 | 36.0 |
+| 11 | GPT-4.1-2025-04-14 | 34.4 | 34.3 | 33.5 | 31.9 | 33.6 | 33.5 | 33.3 | 36.7 | 36.8 | 33.3 | 36.8 |
+| 12 | Qwen2.5-72B-Instruct | 34.4 | 32.7 | 33.5 | 31.4 | 34.3 | 34.7 | 33.5 | 36.3 | 35.2 | 33.1 | 35.9 |
+| 13 | Qwen3-32B | 34.2 | 34.8 | 33.9 | 32.5 | 34.2 | 34.0 | 33.5 | 36.0 | 34.8 | 33.0 | 35.7 |
+| 14 | Claude-3.5-Haiku-20241022 | 34.1 | 34.4 | 33.5 | 32.2 | 34.4 | 33.9 | 33.7 | 35.0 | 34.8 | 33.8 | 35.4 |
+| 15 | Llama-4-Scout-17B-16E-Instruct | 34.1 | 34.4 | 34.1 | 32.4 | 34.3 | 34.5 | 33.4 | 36.3 | 33.4 | 32.8 | 35.3 |
+| 16 | Qwen2.5-Coder-32B-Instruct | 34.1 | 32.5 | 33.0 | 30.9 | 34.2 | 34.1 | 33.4 | 36.4 | 35.5 | 32.9 | 34.8 |
+| 17 | Llama-3.3-70B-Instruct | 33.9 | 32.1 | 32.0 | 31.0 | 33.3 | 34.6 | 33.7 | 36.0 | 34.6 | 32.5 | 35.1 |
+| 18 | GPT-4-turbo-2024-04-09 | 33.8 | 33.6 | 33.5 | 31.4 | 33.4 | 33.7 | 33.1 | 35.8 | 34.5 | 33.6 | 35.2 |
+| 19 | GPT-4o-2024-11-20 | 33.8 | 30.7 | 31.6 | 30.2 | 33.9 | 33.4 | 33.2 | 36.2 | 34.1 | 32.1 | 34.4 |
+| 20 | o4-mini (Med) | 33.5 | 32.8 | 32.8 | 31.6 | 33.0 | 33.8 | 32.4 | 36.4 | 35.6 | 31.8 | 34.7 |
+| 21 | Llama-3.1-70B-Instruct | 33.3 | 32.6 | 30.1 | 30.9 | 33.6 | 33.6 | 32.6 | 34.9 | 33.6 | 32.5 | 34.8 |
+| 22 | DeepSeek-R1 | 33.3 | 33.9 | 32.4 | 31.3 | 32.9 | 33.1 | 31.6 | 35.2 | 34.5 | 33.8 | 35.1 |
+| 23 | GPT-5 | 33.1 | 33.0 | 32.3 | 30.6 | 32.0 | 33.9 | 32.4 | 35.5 | 35.0 | 32.7 | 34.7 |
+| 24 | Llama-3.1-8B-Instruct | 32.6 | 31.3 | 32.8 | 30.0 | 32.6 | 32.0 | 32.6 | 33.6 | 33.2 | 31.5 | 34.4 |
+| 25 | GPT-3.5-turbo-0125 | 31.3 | 30.3 | 30.0 | 27.1 | 32.1 | 31.4 | 30.3 | 31.3 | 31.6 | 30.3 | 33.5 |
+| 26 | DeepSeek-V3 | 25.7 | 25.2 | 25.0 | 23.4 | 25.4 | 25.5 | 24.8 | 27.4 | 26.6 | 25.3 | 26.5 |
+
+---
 
 🏅 **Legend**:  
 - 🥇 = 1st place per column  
